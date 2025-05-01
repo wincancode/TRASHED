@@ -1,6 +1,7 @@
 import math
 import pygame
 from entities.entity import Entity
+from entities.bullet import Bullet
 import settings as stt
 
 
@@ -19,8 +20,9 @@ class Ship(Entity):
         self.set_pos(stt.GAME_WIDTH / 2, stt.GAME_HEIGHT / 2)
         self.set_angle(360)
         self.set_active(True)
+        self.space_pressed = False
 
-    def control(self, keys):
+    def control(self, keys, bullets):
         if keys[pygame.K_w]:
             #accelerate where the ship is facing
             self.accelerationX = self.acceleration *math.sin(math.radians(self.angle))
@@ -36,7 +38,12 @@ class Ship(Entity):
         if keys[pygame.K_d]:
             self.rotate(self.angle_speed)
         if keys[pygame.K_SPACE]:
-            self.shoot()
+            if not self.space_pressed:
+                self.shoot(bullets)
+                self.space_pressed = True
+        else:
+            self.space_pressed = False
     
-    def shoot(self):
-        print(f"Shooting from {self.id} at angle {self.angle}!")
+    def shoot(self, bullets):
+        bullet = Bullet(self.posX, self.posY, self.angle)
+        bullets.append(bullet)

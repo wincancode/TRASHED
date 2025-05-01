@@ -2,6 +2,7 @@ import pygame
 import sys
 from entities.ship import Ship
 from entities.asteroid import Asteroid
+from entities.bullet import Bullet
 import settings as stt
 
 # Initialize Pygame
@@ -20,13 +21,14 @@ ship1 = Ship(1)
 clock = pygame.time.Clock()
 
 asteroids = []
+bullets = []
 
 for i in range(10):
     asteroids.append(Asteroid(i))
 
 def getInputs(deltaTime):
     keys = pygame.key.get_pressed()
-    ship1.control(keys)
+    ship1.control(keys, bullets)
     ship1.updatePosition(deltaTime)
 
 
@@ -46,6 +48,13 @@ while running:
     for asteroid in asteroids:
         asteroid.updatePosition(delta_time)
         asteroid.draw(screen)
+
+    for bullet in bullets[:]:
+        bullet.updatePosition(delta_time)
+        if not bullet.active:
+            bullets.remove(bullet)
+        else:
+            bullet.draw(screen)
 
     getInputs(delta_time)
     
