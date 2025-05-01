@@ -43,7 +43,7 @@ while running:
     delta_time = clock.tick(stt.GAME_FPS) / 1000.0  # Convert milliseconds to seconds
 
     # Fill the screen
-    screen.fill(stt.WHITE)
+    screen.fill(stt.BLACK)
 
     for asteroid in asteroids:
         asteroid.updatePosition(delta_time)
