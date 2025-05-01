@@ -55,9 +55,6 @@ class Entity:
         accelerationY = self.accelerationY - stt.SHIP_DEACCELERATION_RATE * delta_time * (1 if self.accelerationY > 0 else -1)
 
         self.set_current_acceleration(accelerationX, accelerationY)
-
-        print(f"acceleration:{self.accelerationY}")
-        print(f"speed: {self.speedY}")
        
     def rotate(self, angle):
         self.angle += angle * self.angle_speed

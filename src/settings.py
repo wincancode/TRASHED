@@ -45,5 +45,18 @@ SHIP_HEIGHT = 30  # Height of the ship in pixels
 ASTEROID_BASE_SPEED = 5  # Base speed of the asteroid in units per second
 ASTEROID_BASE_ACCELERATION = 0.5  # Base acceleration of the asteroid in units per second
 ASTEROID_VARIANCE = 0.5  # Variance in speed for asteroids
-ASTEROID_DEFAULT_SPRITE = "../assets/asteroid.png"  # Default sprite for the asteroid
+ASTEROID_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "asteroid.png")  # Default sprite for the asteroid
+
+# Shot sprite dimensions
+SHOT_WIDTH = 10  # Width of the shot in pixels
+SHOT_HEIGHT = 10  # Height of the shot in pixels
+
+# Shot constants
+SHOT_WIDTH = 10  # Width of the shot in pixels
+SHOT_HEIGHT = 10  # Height of the shot in pixels
+SHOT_BASE_SPEED = 20  # Base speed of the shot in units per second
+SHOT_BASE_DAMAGE = 1  # Base damage of the shot
+SHOT_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shot.png")  # Default sprite for the shot
+
+
 

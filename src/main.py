@@ -1,6 +1,7 @@
 import pygame
 import sys
 from entities.ship import Ship
+from entities.asteroid import Asteroid
 import settings as stt
 
 # Initialize Pygame
@@ -17,6 +18,11 @@ pygame.display.set_caption("Moving Rectangle")
 ship1 = Ship(1)
 
 clock = pygame.time.Clock()
+
+asteroids = []
+
+for i in range(10):
+    asteroids.append(Asteroid(i))
 
 def getInputs(deltaTime):
     keys = pygame.key.get_pressed()
@@ -35,7 +41,11 @@ while running:
     delta_time = clock.tick(stt.GAME_FPS) / 1000.0  # Convert milliseconds to seconds
 
     # Fill the screen
-    screen.fill(stt.BLACK)
+    screen.fill(stt.WHITE)
+
+    for asteroid in asteroids:
+        asteroid.updatePosition(delta_time)
+        asteroid.draw(screen)
 
     getInputs(delta_time)
     
