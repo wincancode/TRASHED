@@ -36,21 +36,26 @@ class Entity:
 
         
         # Update velocity based on acceleration
-        speedX = self.speedX + self.accelerationX * delta_time
-        speedY = self.speedY + self.accelerationY * delta_time
+        self.speedX += self.accelerationX * delta_time
+        self.speedY += self.accelerationY * delta_time
 
-        self.speedX *= 0.5
-        self.speedY *= 0.5
+        if self.accelerationX == 0:
+            self.speedY -= stt.SHIP_DEACCELERATION_RATE * delta_time * (1 if self.speedY > 0 else -1)
+            if abs(self.speedY) < 0.01:
+                self.speedY = 0
 
+        if self.accelerationY == 0:
+            self.speedX -= stt.SHIP_DEACCELERATION_RATE * delta_time * (1 if self.speedX > 0 else -1)
+            if abs(self.speedX) < 0.01:
+                self.speedX = 0
 
-        self.set_current_speed(speedX,speedY)
+        self.set_current_speed(self.speedX, self.speedY)
 
-        # Update acceleration based on time and deceleration rate
         accelerationX = self.accelerationX - stt.SHIP_DEACCELERATION_RATE * delta_time * (1 if self.accelerationX > 0 else -1)
         accelerationY = self.accelerationY - stt.SHIP_DEACCELERATION_RATE * delta_time * (1 if self.accelerationY > 0 else -1)
 
-        self.set_current_acceleration(accelerationX,accelerationY)
-        
+        self.set_current_acceleration(accelerationX, accelerationY)
+
         print(f"acceleration:{self.accelerationY}")
         print(f"speed: {self.speedY}")
        

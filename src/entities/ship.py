@@ -25,6 +25,9 @@ class Ship(Entity):
             #accelerate where the ship is facing
             self.accelerationX = self.acceleration *math.sin(math.radians(self.angle))
             self.accelerationY = -self.acceleration *math.cos(math.radians(self.angle))
+        else:
+            self.accelerationX = 0
+            self.accelerationY = 0
         if keys[pygame.K_s]:
             self.accelerationX = 0
             self.accelerationY = 0

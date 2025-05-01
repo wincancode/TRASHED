@@ -25,8 +25,8 @@ BLUE = (0, 0, 255)  # RGB color for blue
 
 
 # Ship constants 
-SHIP_BASE_SPEED = 10  # Base speed of the ship in units per second
-SHIP_BASE_ACCELERATION = 30   # Base acceleration of the ship in units per second
+SHIP_BASE_SPEED = 40  # Base speed of the ship in units per second
+SHIP_BASE_ACCELERATION = 70   # Base acceleration of the ship in units per second
 SHIP_DEACCELERATION_RATE = 10 
 SHIP_BASE_TURN_RATE = 1  # Base turn rate of the ship in radians per second
 SHIP_BASE_TURN_ACCELERATION = 1  # Base turn acceleration of the ship in radians per second
