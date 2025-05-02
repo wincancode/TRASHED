@@ -25,10 +25,10 @@ BLUE = (0, 0, 255)  # RGB color for blue
 
 
 # Ship constants 
-SHIP_BASE_SPEED = 70  # Base speed of the ship in units per second
-SHIP_BASE_ACCELERATION = 90   # Base acceleration of the ship in units per second
-SHIP_DEACCELERATION_RATE = 10 
-SHIP_BASE_TURN_RATE = 1.5 # Base turn rate of the ship in radians per second
+SHIP_BASE_SPEED = 80  # Base speed of the ship in units per second
+SHIP_BASE_ACCELERATION = 100   # Base acceleration of the ship in units per second
+SHIP_DEACCELERATION_RATE = 40 
+SHIP_BASE_TURN_RATE = 1  # Base turn rate of the ship in radians per second
 SHIP_BASE_TURN_ACCELERATION = 1  # Base turn acceleration of the ship in radians per second
 SHIP_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "ship.png")  # Default sprite for the ship
 

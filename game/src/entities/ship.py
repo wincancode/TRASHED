@@ -33,6 +33,10 @@ class Ship(Entity):
         if keys[pygame.K_s]:
             self.accelerationX = 0
             self.accelerationY = 0
+            # Aplicar desaceleración rápida
+            self.speedX *= 0.98  # Reduce la velocidad en el eje X
+            self.speedY *= 0.98 # Reduce la velocidad en el eje Y
+            
         if keys[pygame.K_a]:
             self.rotate(-self.angle_speed)
         if keys[pygame.K_d]:
