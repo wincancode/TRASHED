@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package hello;
+
+option go_package = "grpc-server-project/proto";
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello(Greeting) returns (Greeting);
+
+  // Bidirectional streaming for live chat
+  rpc Chat(stream Greeting) returns (stream Greeting);
+}
+
+// The request message containing the user's name.
+message Greeting {
+  string sender = 1;
+  string message = 2;
+}

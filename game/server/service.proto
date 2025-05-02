@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package server;
+
+
+option go_package = "Trashed/proto";
+
+service GameService{
+    rpc JoinGame(PlayerData) returns (stream PlayerData);
+    rpc SendState(PlayerState) returns (GameState);
+    rpc GetGameState(Empty) returns (GameState);
+}
+
+
+
+
+message PlayerData{
+    string player_uuid = 1;
+    int64 timestamp = 2;     //For sync
+    string username = 3;
+    string color = 4;
+    int32 slot = 5;
+}
+
+message GameState{
+    repeated PlayerState players = 1;
+    repeated AsteroidState asteroids = 2;
+    repeated BulletState bullets = 3;
+}
+
+message PlayerState{
+    string player_uuid = 1;
+    int64 timestamp = 2;    //For sync
+    int32 posX = 3; 
+    int32 posY = 4;
+    int32 angle = 5;
+}
+
+message PlayerShot{
+    string player_uuid = 1;
+    int64 timestamp = 2;
+    int32 speed = 3;
+    int32 rotation = 4;
+    int32 posX = 5;
+    int32 posY = 6;
+}
+
+message AsteroidState{
+    int32 posX = 1;
+    int32 posY = 2;
+    int32 angle = 3;
+    }
+
+message BulletState{
+    int32 posX = 1;
+    int32 posY = 2;
+    int32 angle = 3;
+}
+
+
+message Empty{}
