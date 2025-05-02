@@ -15,7 +15,6 @@ pygame.display.set_caption("Moving Rectangle")
 
 # Colors
 
-
 ship1 = Ship(1)
 
 clock = pygame.time.Clock()
