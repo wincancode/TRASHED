@@ -90,6 +90,10 @@ class Entity:
             # Draw the rotated sprite on the screen
             screen.blit(rotated_sprite, rect.topleft)
             
+    def Update(self, delta_time, screen):
+        self.updatePosition(delta_time)
+        self.draw(screen)
+
     
     
     # Getters

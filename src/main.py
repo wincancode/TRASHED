@@ -32,10 +32,27 @@ def getInputs(deltaTime):
     ship1.updatePosition(deltaTime)
 
 
+Mostrar_inicio = True
 
 # Main game loop
 running = True
 while running:
+    if Mostrar_inicio:
+        screen.fill(stt.BLACK)
+        font = pygame.font.Font(None, 74)
+        text = font.render("Press ENTER to Start", True, stt.WHITE)
+        text_rect = text.get_rect(center=(screen_width // 2, screen_height // 2))
+        screen.blit(text, text_rect)
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                Mostrar_inicio = False
+        continue
+
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -46,15 +63,13 @@ while running:
     screen.fill(stt.BLACK)
 
     for asteroid in asteroids:
-        asteroid.updatePosition(delta_time)
-        asteroid.draw(screen)
+        asteroid.Update(delta_time,screen)
 
     for bullet in bullets[:]:
-        bullet.updatePosition(delta_time)
+        bullet.Update(delta_time,screen)
         if not bullet.active:
             bullets.remove(bullet)
-        else:
-            bullet.draw(screen)
+        
 
     getInputs(delta_time)
     
