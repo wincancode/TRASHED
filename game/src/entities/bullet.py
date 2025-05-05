@@ -1,8 +1,9 @@
 import pygame
 import math
 import settings as stt
+from entities.entity import Entity
 
-class Bullet:
+class Bullet(Entity):
     def __init__(self, x, y, angle):
         self.posX = x
         self.posY = y
@@ -24,7 +25,11 @@ class Bullet:
             self.active = False
 
     def draw(self, screen):
-        screen.blit(self.sprite, (self.posX, self.posY))
-        
+        rotated_sprite = pygame.transform.rotate(self.sprite, -self.angle)
+        # Ajustar la posición para centrar el sprite rotado
+        sprite_rect = rotated_sprite.get_rect(center=(self.posX, self.posY))
+        screen.blit(rotated_sprite, sprite_rect.topleft)
+    
+
 
         
