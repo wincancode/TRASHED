@@ -1,12 +1,12 @@
+import grpc
 import pygame
+from connectivity import request_game_code_from_server
+import server.service_pb2 as service_pb2
+import server.service_pb2_grpc as service_pb2_grpc
 import settings as stt
 import sys
 import random
-import grpc
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '../server'))
-import service_pb2
-import service_pb2_grpc
 
 
 screen_width, screen_height = stt.GAME_WIDTH, stt.GAME_HEIGHT
@@ -48,16 +48,6 @@ def send_game_state_to_server(game_code, ships):
         except grpc.RpcError as e:
             print(f"Failed to send game state: {e}")
 
-def request_game_code_from_server():
-    """Request a game code from the server."""
-    with grpc.insecure_channel('localhost:50051') as channel:
-        stub = service_pb2_grpc.GameServiceStub(channel)
-        try:
-            response = stub.CreateGame(service_pb2.Empty())
-            return response.code
-        except grpc.RpcError as e:
-            print(f"Failed to create game: {e}")
-            return None
 
 def draw_button(screen, text, x, y, width, height, font, color, hover_color, mouse_pos, click):
     button_rect = pygame.Rect(x, y, width, height)
@@ -118,11 +108,8 @@ def show_create_game_screen():
     font_title = pygame.font.Font(None, 74)
     font_code = pygame.font.Font(None, 50)
 
-    # Request a game code from the server
+    # Generar un código de partida aleatorio
     game_code = request_game_code_from_server()
-    if not game_code:
-        print("Error: Could not retrieve game code from server.")
-        return
 
     # Arreglo de naves (máximo 3)
     ships = ["red", "blue"]  # Colores de las naves
@@ -151,6 +138,21 @@ def show_create_game_screen():
         code_rect = code_text.get_rect(center=(screen_width // 2, screen_height // 2 - 50))
         screen.blit(code_text, code_rect)
 
+        # Dibujar las naves con separaciones
+        start_x = screen_width // 2 - 100
+        y_position = screen_height // 2 + 20
+        for i in range(3):  # Siempre iterar hasta 3 para mostrar divisores
+            x_position = start_x + i * 100
+            if i < len(ships):
+                color = ships[i]
+                screen.blit(ship_images[color], (x_position, y_position))
+
+            # Dibujar separadores
+            if i < 2:  # Mostrar separadores entre las posiciones
+                separator_text = font_code.render("/", True, stt.WHITE)
+                separator_rect = separator_text.get_rect(center=(x_position + 75, y_position + 25))
+                screen.blit(separator_text, separator_rect)
+
         # Dibujar botón de "Empezar partida"
         button_width, button_height = 200, 50
         button_x = screen_width - button_width - 20
@@ -176,6 +178,7 @@ def show_create_game_screen():
 
         pygame.display.flip()
         clock.tick(60)
+
 
 def show_join_game_screen():
     font = pygame.font.Font(None, 50)

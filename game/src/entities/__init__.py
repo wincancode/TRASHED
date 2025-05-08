@@ -1,2 +1,2 @@
 from .entity import Entity
-from.ship import Ship
+from .ship import Ship
