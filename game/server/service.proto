@@ -5,14 +5,16 @@ package server;
 
 option go_package = "Trashed/proto";
 
-service GameService{
-    rpc JoinGame(PlayerData) returns (stream PlayerData);
-    rpc SendState(PlayerState) returns (GameState);
-    rpc GetGameState(Empty) returns (GameState);
+service GameService {
+    rpc CreateGame (Empty) returns (GameCode); // Nuevo método para crear partidas
+    rpc JoinGame (PlayerData) returns (stream PlayerData);
+    rpc SendState (PlayerState) returns (GameState);
+    rpc GetGameState (Empty) returns (GameState);
 }
 
-
-
+message GameCode {
+    string code = 1; // Código único de la partida
+}
 
 message PlayerData{
     string player_uuid = 1;

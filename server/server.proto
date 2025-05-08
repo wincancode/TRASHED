@@ -5,14 +5,14 @@ package server;
 
 option go_package = "Trashed/proto";
 
-service GameService{
-    rpc JoinGame(PlayerData) returns (PlayerData);
-    rpc SendState(PlayerState) returns (GameState);
-    rpc GetGameState(Empty) returns (GameState);
+message GameCode {
+  string code = 1;
 }
 
-
-
+service GameService {
+  rpc CreateGame (Empty) returns (GameCode);
+  rpc JoinGame (PlayerData) returns (stream PlayerData);
+}
 
 message PlayerData{
     string player_uuid = 1;
@@ -20,6 +20,11 @@ message PlayerData{
     string username = 3;
     string color = 4;
     int32 slot = 5;
+}
+
+message GameData {
+  string code = 1;                     // Unique game code
+  repeated PlayerData players = 2;     // List of players in the game
 }
 
 message GameState{

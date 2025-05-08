@@ -34,6 +34,11 @@ class GameServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.CreateGame = channel.unary_unary(
+                '/server.GameService/CreateGame',
+                request_serializer=service__pb2.Empty.SerializeToString,
+                response_deserializer=service__pb2.GameCode.FromString,
+                _registered_method=True)
         self.JoinGame = channel.unary_stream(
                 '/server.GameService/JoinGame',
                 request_serializer=service__pb2.PlayerData.SerializeToString,
@@ -53,6 +58,13 @@ class GameServiceStub(object):
 
 class GameServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def CreateGame(self, request, context):
+        """Nuevo método para crear partidas
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def JoinGame(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -75,6 +87,11 @@ class GameServiceServicer(object):
 
 def add_GameServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'CreateGame': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateGame,
+                    request_deserializer=service__pb2.Empty.FromString,
+                    response_serializer=service__pb2.GameCode.SerializeToString,
+            ),
             'JoinGame': grpc.unary_stream_rpc_method_handler(
                     servicer.JoinGame,
                     request_deserializer=service__pb2.PlayerData.FromString,
@@ -100,6 +117,33 @@ def add_GameServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class GameService(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def CreateGame(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/server.GameService/CreateGame',
+            service__pb2.Empty.SerializeToString,
+            service__pb2.GameCode.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
     @staticmethod
     def JoinGame(request,
