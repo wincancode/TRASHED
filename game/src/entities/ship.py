@@ -21,6 +21,11 @@ class Ship(Entity):
         self.set_angle(360)
         self.set_active(True)
         self.space_pressed = False
+        self.lives = 3
+    
+    def lose_life(self):
+        """Reduce la vida de la nave en 1."""
+        self.lives -= 1
 
     def control(self, keys, bullets):
         if keys[pygame.K_w]:

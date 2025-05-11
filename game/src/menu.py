@@ -246,3 +246,13 @@ def show_join_game_screen():
                         player_name += event.unicode
 
         clock.tick(30)
+
+def show_game_over_screen(screen, screen_width, screen_height):
+    """Display the Game Over screen."""
+    font = pygame.font.Font(None, 74)
+    text = font.render("Game Over", True, stt.WHITE)
+    text_rect = text.get_rect(center=(screen_width // 2, screen_height // 2))
+    screen.fill(stt.BLACK)
+    screen.blit(text, text_rect)
+    pygame.display.flip()
+    pygame.time.wait(3000)  # Wait for 3 seconds
