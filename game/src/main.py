@@ -3,7 +3,7 @@ import sys
 from entities.ship import Ship
 from entities.asteroid import Asteroid
 from menu import show_start_screen, show_create_game_screen, show_join_game_screen, show_game_over_screen
-from collision import check_collisions, handle_bullet_asteroid_collisions
+from collision import check_collisions, handle_bullet_asteroid_collisions, check_powerup_collisions, apply_powerup_effect
 import settings as stt
 from level import Level
 from ui import draw_text, draw_progress_bar
@@ -24,6 +24,8 @@ clock = pygame.time.Clock()
 asteroids = []
 bullets = []
 messages = []
+powerups = []
+released_asteroids = []
 
 MIN_ASTEROIDS = 10
 
@@ -62,14 +64,14 @@ while running:
 
     delta_time = clock.tick(stt.GAME_FPS) / 1000.0  # Convert milliseconds to seconds
 
-    if check_collisions(ship1, asteroids):
+    if check_collisions(ship1, asteroids, released_asteroids):
         if ship1.lives <= 0:
             show_game_over_screen(screen, screen_width, screen_height)
             running = False
             break
 
     # Manejar colisiones entre balas y asteroides
-    points, destroyed_count = handle_bullet_asteroid_collisions(bullets, asteroids, messages)
+    points, destroyed_count = handle_bullet_asteroid_collisions(bullets, asteroids, messages, powerups, released_asteroids)
     score += points  # Sumar los puntos obtenidos al puntaje total
     level.update(destroyed_count, asteroids)  # Actualizar el progreso del nivel
 
@@ -102,6 +104,19 @@ while running:
             messages.remove(message)
         else:
             draw_text(screen, message["text"], message["pos"], (255, 255, 255), opacity=int(message["opacity"]))
+
+    for powerup in powerups[:]:
+        powerup.draw(screen)
+        powerup.update(delta_time)
+        if check_powerup_collisions(ship1, powerup):  # Detectar si la nave recoge el potenciador
+            apply_powerup_effect(ship1, powerup.power_type, messages)  # Pasar la lista de mensajes
+            powerups.remove(powerup)
+
+    for asteroid in released_asteroids[:]:
+        asteroid.Update(delta_time, screen)
+        asteroid.draw_health(screen)
+        if asteroid.health <= 0:
+            released_asteroids.remove(asteroid)
 
     # Mostrar el mensaje de "Subiste de Nivel"
     if level.level_up_message_timer > 0:

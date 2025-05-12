@@ -22,10 +22,28 @@ class Ship(Entity):
         self.set_active(True)
         self.space_pressed = False
         self.lives = 3
+        self.laser_boost_level = 0
+        self.shield_charges = 0  # Número de cargas del escudo
+        self.shield_active = False  # Indica si el escudo está activo
+
     
     def lose_life(self):
         """Reduce la vida de la nave en 1."""
         self.lives -= 1
+    
+    def activate_shield(self):
+        """Activa el escudo si hay cargas disponibles."""
+        if self.shield_charges > 0:
+            self.shield_active = True
+
+    def block_impact(self):
+        """Bloquea un impacto y reduce las cargas del escudo."""
+        if self.shield_active:
+            self.shield_charges -= 1
+            if self.shield_charges <= 0:
+                self.shield_active = False
+            return True  # Impacto bloqueado
+        return False  # Impacto no bloqueado
 
     def control(self, keys, bullets):
         if keys[pygame.K_w]:
@@ -54,5 +72,20 @@ class Ship(Entity):
             self.space_pressed = False
     
     def shoot(self, bullets):
-        bullet = Bullet(self.posX, self.posY, self.angle)
+        bullet = Bullet(self.posX, self.posY, self.angle, self.laser_boost_level)
         bullets.append(bullet)
+
+    def draw(self, screen):
+        """Dibuja la nave y, si está activo, el escudo."""
+        # Llamar al método draw de la clase base para dibujar la nave
+        super().draw(screen)
+
+        # Dibujar el escudo si está activo
+        if self.shield_active:
+            pygame.draw.circle(
+                screen,
+                (0, 255, 255),  # Color del escudo (cian)
+                (int(self.posX), int(self.posY)),  # Centro del círculo
+                self.width,  # Radio del círculo (igual al ancho de la nave)
+                3  # Grosor del borde del círculo
+            )
