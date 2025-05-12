@@ -44,3 +44,19 @@ class Asteroid(Entity):
         health_text = font.render(f"{self.health}", True, (255, 255, 255))  # Blanco
         text_rect = health_text.get_rect(center=(self.posX, self.posY - self.height // 2 - 10))
         screen.blit(health_text, text_rect)
+
+def release_asteroids(ship, released_asteroids):
+    """Libera asteroides alrededor de la nave al romperse el escudo."""
+    safe_radius = 50  # Distancia segura desde el centro de la nave
+    for i in range(8):  # Generar 8 asteroides en diferentes direcciones
+        angle = math.radians(i * 45)  # Ángulos predefinidos (0, 45, 90, ..., 315) en radianes
+        asteroid = Asteroid(-1, difficulty_factor=0)  # Vida mínima
+        asteroid.set_pos(
+            ship.posX + safe_radius * math.cos(angle),  # Calcular la posición X
+            ship.posY + safe_radius * math.sin(angle)   # Calcular la posición Y
+        )
+        asteroid.set_angle(math.degrees(angle))  # Establecer el ángulo en grados
+        asteroid.set_speed(200)  # Velocidad alta
+        asteroid.health = 1  # Vida mínima
+        asteroid.max_health = 1
+        released_asteroids.append(asteroid)

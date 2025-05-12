@@ -1,9 +1,7 @@
 import pygame
-import math
-import settings as stt
 from entities.powerup import PowerUp
+from entities.asteroid import release_asteroids
 import random
-from entities.asteroid import Asteroid
 
 def check_collisions(ship, asteroids, released_asteroids):
     """Check for collisions between the ship y todos los asteroides."""
@@ -90,38 +88,3 @@ def check_powerup_collisions(ship, powerup):
     powerup_rect = pygame.Rect(powerup.posX - powerup.width // 2, powerup.posY - powerup.height // 2, powerup.width, powerup.height)
     return ship_rect.colliderect(powerup_rect)
 
-def apply_powerup_effect(ship, power_type, messages):
-    """Aplica el efecto del potenciador a la nave."""
-    if power_type == "laser_boost":
-        ship.laser_boost_level += 1  # Incrementar el nivel del láser
-        messages.append({
-            "text": f"Láser mejorado: Nivel {ship.laser_boost_level}",
-            "pos": [ship.posX, ship.posY - 50],
-            "opacity": 255,
-            "timer": 3.0
-        })
-    elif power_type == "shield":
-        ship.shield_charges += 1  # Incrementar las cargas del escudo
-        ship.shield_active = True  # Activar el escudo
-        messages.append({
-            "text": f"Escudo mejorado: {ship.shield_charges} cargas",
-            "pos": [ship.posX, ship.posY - 50],
-            "opacity": 255,
-            "timer": 3.0
-        })
-
-def release_asteroids(ship, released_asteroids):
-    """Libera asteroides alrededor de la nave al romperse el escudo."""
-    safe_radius = 50  # Distancia segura desde el centro de la nave
-    for i in range(8):  # Generar 8 asteroides en diferentes direcciones
-        angle = math.radians(i * 45)  # Ángulos predefinidos (0, 45, 90, ..., 315) en radianes
-        asteroid = Asteroid(-1, difficulty_factor=0)  # Vida mínima
-        asteroid.set_pos(
-            ship.posX + safe_radius * math.cos(angle),  # Calcular la posición X
-            ship.posY + safe_radius * math.sin(angle)   # Calcular la posición Y
-        )
-        asteroid.set_angle(math.degrees(angle))  # Establecer el ángulo en grados
-        asteroid.set_speed(200)  # Velocidad alta
-        asteroid.health = 1  # Vida mínima
-        asteroid.max_health = 1
-        released_asteroids.append(asteroid)

@@ -1,12 +1,18 @@
-import pygame
+# Imports estándar de Python
 import sys
+
+# Imports de terceros
+import pygame
+
+# Imports locales o específicos del proyecto
 from entities.ship import Ship
 from entities.asteroid import Asteroid
+from entities.powerup import apply_powerup_effect
+from collision import check_collisions, handle_bullet_asteroid_collisions, check_powerup_collisions
 from menu import show_start_screen, show_create_game_screen, show_join_game_screen, show_game_over_screen
-from collision import check_collisions, handle_bullet_asteroid_collisions, check_powerup_collisions, apply_powerup_effect
-import settings as stt
 from level import Level
 from ui import draw_text, draw_progress_bar
+import settings as stt
 # Initialize Pygame
 pygame.init()
 

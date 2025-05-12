@@ -24,3 +24,24 @@ class PowerUp:
     def update(self, delta_time):
         """Actualizar lógica del potenciador (si es necesario)."""
         pass
+
+def apply_powerup_effect(ship, power_type, messages):
+    """Aplica el efecto del potenciador a la nave."""
+    if power_type == "laser_boost":
+        ship.laser_boost_level += 1  # Incrementar el nivel del láser
+        messages.append({
+            "text": f"Láser mejorado: Nivel {ship.laser_boost_level}",
+            "pos": [ship.posX, ship.posY - 50],
+            "opacity": 255,
+            "timer": 3.0
+        })
+    elif power_type == "shield":
+        ship.shield_charges += 1  # Incrementar las cargas del escudo
+        ship.shield_active = True  # Activar el escudo
+        messages.append({
+            "text": f"Escudo mejorado: {ship.shield_charges} cargas",
+            "pos": [ship.posX, ship.posY - 50],
+            "opacity": 255,
+            "timer": 3.0
+        })
+
