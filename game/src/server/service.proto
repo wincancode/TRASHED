@@ -5,20 +5,29 @@ package server;
 
 option go_package = "Trashed/proto";
 
+
+
 service GameService {
-    rpc CreateGame (Empty) returns (GameCode); // Nuevo método para crear partidas
-    rpc JoinGame (PlayerData) returns (stream GameData);
-    rpc SendState (PlayerState) returns (GameState);
-    rpc GetGameState (Empty) returns (GameState);
+  rpc CreateGame (Empty) returns (GameCode);
+  rpc JoinGame (PlayerData) returns (stream GameData);
+  //rpc JoinInputUpdates(stream GameInputsStream) returns(stream GameInputsStream);
+  rpc StartGame(GameCode) returns(BoolMessage);
 }
 
-message GameCode {
-    string code = 1; // Código único de la partida
+
+message BoolMessage{
+  bool value = 1;
 }
 
-message GameData {
-  string code = 1;                     // Unique game code
-  repeated PlayerData players = 2;     // List of players in the game
+message GameCode{
+  string code = 1;
+}
+
+
+message GameInputsStream{
+    string gameCode = 1;
+    PlayerData player = 2;
+    PlayerInput input = 3;
 }
 
 message PlayerData{
@@ -28,13 +37,16 @@ message PlayerData{
     string color = 4;
     int32 slot = 5;
     string game_code= 6; // Código de la partida a la que se une
+    bool ready = 7;
+    
 }
 
-message GameState{
-    repeated PlayerState players = 1;
-    repeated AsteroidState asteroids = 2;
-    repeated BulletState bullets = 3;
+message GameData {
+  string code = 1;                     // Unique game code
+  repeated PlayerData players = 2;     // List of players in the game
+  bool started = 3;
 }
+
 
 message PlayerState{
     string player_uuid = 1;
@@ -44,25 +56,12 @@ message PlayerState{
     int32 angle = 5;
 }
 
-message PlayerShot{
-    string player_uuid = 1;
-    int64 timestamp = 2;
-    int32 speed = 3;
-    int32 rotation = 4;
-    int32 posX = 5;
-    int32 posY = 6;
-}
-
-message AsteroidState{
-    int32 posX = 1;
-    int32 posY = 2;
-    int32 angle = 3;
-    }
-
-message BulletState{
-    int32 posX = 1;
-    int32 posY = 2;
-    int32 angle = 3;
+message PlayerInput{
+  bool move = 1;
+  bool stride_left = 2;
+  bool stride_right = 3;
+  bool stop = 4;
+  bool is_shoot =5;  
 }
 
 

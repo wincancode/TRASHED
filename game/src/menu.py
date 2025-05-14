@@ -1,6 +1,6 @@
 import grpc
 import pygame
-from connectivity import request_game_code_from_server, connect_to_server
+from connectivity import request_game_code_from_server, connect_to_server, request_start_game
 import server.service_pb2 as service_pb2
 import server.service_pb2_grpc as service_pb2_grpc
 import settings as stt
@@ -305,5 +305,8 @@ def show_waiting_screen(game_code, player_id, player_name):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_H:
+                    request_start_game(game_code)
+                    
         clock.tick(30)

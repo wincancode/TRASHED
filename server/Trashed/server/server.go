@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Trashed/proto"
+	"Trashed/Trashed/proto"
 	"context"
 	"fmt"
 	"log"
@@ -58,37 +58,13 @@ func (s *server) CreateGame(ctx context.Context, in *proto.Empty) (*proto.GameCo
 	s.games[gameCode] = &proto.GameData{
 		Code:    gameCode,
 		Players: []*proto.PlayerData{},
+		Started: false,
 	}
 
 	log.Printf("Game created with code: %s", gameCode)
 	return &proto.GameCode{Code: gameCode}, nil
 }
 
-func addPlayer(in *proto.PlayerData) {
-	// Add the player to the list of clients
-	for i := range players {
-		if players[i].PlayerUuid == in.PlayerUuid {
-			log.Printf("Player %s already exists", in.PlayerUuid)
-			return
-		}
-	}
-
-	// Add color and slot
-	players = append(players, in)
-
-	in.Slot = int32(len(players) - 1)
-
-	switch len(players) % 3 {
-	case 0:
-		in.Color = Red
-	case 1:
-		in.Color = Green
-	case 2:
-		in.Color = Blue
-	}
-
-	log.Printf("New player added: %s, color %s, slot %d", in.PlayerUuid, in.Color, in.Slot)
-}
 
 func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGameServer) error {
 	gameCode := in.GameCode
@@ -99,7 +75,7 @@ func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGam
 	if !exists {
 		s.mu.Unlock()
 		log.Printf("Partida no encontrada: %s", gameCode)
-		return fmt.Errorf("Partida no encontrada")
+		return fmt.Errorf("partida no encontrada")
 	}
 
 	// Agregar el jugador a la partida
@@ -121,6 +97,7 @@ func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGam
 		gameData := &proto.GameData{
 			Code:    gameCode,
 			Players: game.Players,
+			Started: game.Started,
 		}
 		s.mu.Unlock()
 
@@ -132,6 +109,31 @@ func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGam
 		time.Sleep(1 * time.Second) // Enviar actualizaciones cada segundo
 	}
 }
+
+
+func (s *server) StartGame(ctx context.Context, in *proto.GameCode) (*proto.BoolMessage,error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	gameCode := in.Code
+	game, exists := s.games[gameCode]
+	if !exists {
+		log.Printf("Partida no encontrada: %s", gameCode)
+		return &proto.BoolMessage{Value: false}, fmt.Errorf("partida no encontrada")
+	}
+
+	// Marcar la partida como iniciada
+	game.Started = true
+
+	
+	log.Printf("Partida iniciada: %s", gameCode)
+	return &proto.BoolMessage{Value: true}, nil;
+
+
+}
+
+
+
 
 func main() {
 	// Create a new gRPC server

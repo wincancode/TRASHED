@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\x12\x06server\"\x18\n\x08GameCode\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\"=\n\x08GameData\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\x12#\n\x07players\x18\x02 \x03(\x0b\x32\x12.server.PlayerData\"v\n\nPlayerData\x12\x13\n\x0bplayer_uuid\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x10\n\x08username\x18\x03 \x01(\t\x12\r\n\x05\x63olor\x18\x04 \x01(\t\x12\x0c\n\x04slot\x18\x05 \x01(\x05\x12\x11\n\tgame_code\x18\x06 \x01(\t\"\x81\x01\n\tGameState\x12$\n\x07players\x18\x01 \x03(\x0b\x32\x13.server.PlayerState\x12(\n\tasteroids\x18\x02 \x03(\x0b\x32\x15.server.AsteroidState\x12$\n\x07\x62ullets\x18\x03 \x03(\x0b\x32\x13.server.BulletState\"`\n\x0bPlayerState\x12\x13\n\x0bplayer_uuid\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x0c\n\x04posX\x18\x03 \x01(\x05\x12\x0c\n\x04posY\x18\x04 \x01(\x05\x12\r\n\x05\x61ngle\x18\x05 \x01(\x05\"q\n\nPlayerShot\x12\x13\n\x0bplayer_uuid\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\r\n\x05speed\x18\x03 \x01(\x05\x12\x10\n\x08rotation\x18\x04 \x01(\x05\x12\x0c\n\x04posX\x18\x05 \x01(\x05\x12\x0c\n\x04posY\x18\x06 \x01(\x05\":\n\rAsteroidState\x12\x0c\n\x04posX\x18\x01 \x01(\x05\x12\x0c\n\x04posY\x18\x02 \x01(\x05\x12\r\n\x05\x61ngle\x18\x03 \x01(\x05\"8\n\x0b\x42ulletState\x12\x0c\n\x04posX\x18\x01 \x01(\x05\x12\x0c\n\x04posY\x18\x02 \x01(\x05\x12\r\n\x05\x61ngle\x18\x03 \x01(\x05\"\x07\n\x05\x45mpty2\xd7\x01\n\x0bGameService\x12-\n\nCreateGame\x12\r.server.Empty\x1a\x10.server.GameCode\x12\x32\n\x08JoinGame\x12\x12.server.PlayerData\x1a\x10.server.GameData0\x01\x12\x33\n\tSendState\x12\x13.server.PlayerState\x1a\x11.server.GameState\x12\x30\n\x0cGetGameState\x12\r.server.Empty\x1a\x11.server.GameStateB\x0fZ\rTrashed/protob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\x12\x06server\"\x1c\n\x0b\x42oolMessage\x12\r\n\x05value\x18\x01 \x01(\x08\"\x18\n\x08GameCode\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\"l\n\x10GameInputsStream\x12\x10\n\x08gameCode\x18\x01 \x01(\t\x12\"\n\x06player\x18\x02 \x01(\x0b\x32\x12.server.PlayerData\x12\"\n\x05input\x18\x03 \x01(\x0b\x32\x13.server.PlayerInput\"\x85\x01\n\nPlayerData\x12\x13\n\x0bplayer_uuid\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x10\n\x08username\x18\x03 \x01(\t\x12\r\n\x05\x63olor\x18\x04 \x01(\t\x12\x0c\n\x04slot\x18\x05 \x01(\x05\x12\x11\n\tgame_code\x18\x06 \x01(\t\x12\r\n\x05ready\x18\x07 \x01(\x08\"N\n\x08GameData\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\x12#\n\x07players\x18\x02 \x03(\x0b\x32\x12.server.PlayerData\x12\x0f\n\x07started\x18\x03 \x01(\x08\"`\n\x0bPlayerState\x12\x13\n\x0bplayer_uuid\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x0c\n\x04posX\x18\x03 \x01(\x05\x12\x0c\n\x04posY\x18\x04 \x01(\x05\x12\r\n\x05\x61ngle\x18\x05 \x01(\x05\"f\n\x0bPlayerInput\x12\x0c\n\x04move\x18\x01 \x01(\x08\x12\x13\n\x0bstride_left\x18\x02 \x01(\x08\x12\x14\n\x0cstride_right\x18\x03 \x01(\x08\x12\x0c\n\x04stop\x18\x04 \x01(\x08\x12\x10\n\x08is_shoot\x18\x05 \x01(\x08\"\x07\n\x05\x45mpty2\xa4\x01\n\x0bGameService\x12-\n\nCreateGame\x12\r.server.Empty\x1a\x10.server.GameCode\x12\x32\n\x08JoinGame\x12\x12.server.PlayerData\x1a\x10.server.GameData0\x01\x12\x32\n\tStartGame\x12\x10.server.GameCode\x1a\x13.server.BoolMessageB\x0fZ\rTrashed/protob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,24 +32,22 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'service_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\rTrashed/proto'
-  _globals['_GAMECODE']._serialized_start=25
-  _globals['_GAMECODE']._serialized_end=49
-  _globals['_GAMEDATA']._serialized_start=51
-  _globals['_GAMEDATA']._serialized_end=112
-  _globals['_PLAYERDATA']._serialized_start=114
-  _globals['_PLAYERDATA']._serialized_end=232
-  _globals['_GAMESTATE']._serialized_start=235
-  _globals['_GAMESTATE']._serialized_end=364
-  _globals['_PLAYERSTATE']._serialized_start=366
-  _globals['_PLAYERSTATE']._serialized_end=462
-  _globals['_PLAYERSHOT']._serialized_start=464
-  _globals['_PLAYERSHOT']._serialized_end=577
-  _globals['_ASTEROIDSTATE']._serialized_start=579
-  _globals['_ASTEROIDSTATE']._serialized_end=637
-  _globals['_BULLETSTATE']._serialized_start=639
-  _globals['_BULLETSTATE']._serialized_end=695
-  _globals['_EMPTY']._serialized_start=697
-  _globals['_EMPTY']._serialized_end=704
-  _globals['_GAMESERVICE']._serialized_start=707
-  _globals['_GAMESERVICE']._serialized_end=922
+  _globals['_BOOLMESSAGE']._serialized_start=25
+  _globals['_BOOLMESSAGE']._serialized_end=53
+  _globals['_GAMECODE']._serialized_start=55
+  _globals['_GAMECODE']._serialized_end=79
+  _globals['_GAMEINPUTSSTREAM']._serialized_start=81
+  _globals['_GAMEINPUTSSTREAM']._serialized_end=189
+  _globals['_PLAYERDATA']._serialized_start=192
+  _globals['_PLAYERDATA']._serialized_end=325
+  _globals['_GAMEDATA']._serialized_start=327
+  _globals['_GAMEDATA']._serialized_end=405
+  _globals['_PLAYERSTATE']._serialized_start=407
+  _globals['_PLAYERSTATE']._serialized_end=503
+  _globals['_PLAYERINPUT']._serialized_start=505
+  _globals['_PLAYERINPUT']._serialized_end=607
+  _globals['_EMPTY']._serialized_start=609
+  _globals['_EMPTY']._serialized_end=616
+  _globals['_GAMESERVICE']._serialized_start=619
+  _globals['_GAMESERVICE']._serialized_end=783
 # @@protoc_insertion_point(module_scope)
