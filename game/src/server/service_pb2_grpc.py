@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import server.service_pb2 as service__pb2
+from . import service_pb2 as service__pb2
 
 GRPC_GENERATED_VERSION = '1.71.0'
 GRPC_VERSION = grpc.__version__
@@ -42,7 +42,7 @@ class GameServiceStub(object):
         self.JoinGame = channel.unary_stream(
                 '/server.GameService/JoinGame',
                 request_serializer=service__pb2.PlayerData.SerializeToString,
-                response_deserializer=service__pb2.PlayerData.FromString,
+                response_deserializer=service__pb2.GameData.FromString,
                 _registered_method=True)
         self.SendState = channel.unary_unary(
                 '/server.GameService/SendState',
@@ -95,7 +95,7 @@ def add_GameServiceServicer_to_server(servicer, server):
             'JoinGame': grpc.unary_stream_rpc_method_handler(
                     servicer.JoinGame,
                     request_deserializer=service__pb2.PlayerData.FromString,
-                    response_serializer=service__pb2.PlayerData.SerializeToString,
+                    response_serializer=service__pb2.GameData.SerializeToString,
             ),
             'SendState': grpc.unary_unary_rpc_method_handler(
                     servicer.SendState,
@@ -161,7 +161,7 @@ class GameService(object):
             target,
             '/server.GameService/JoinGame',
             service__pb2.PlayerData.SerializeToString,
-            service__pb2.PlayerData.FromString,
+            service__pb2.GameData.FromString,
             options,
             channel_credentials,
             insecure,

@@ -7,7 +7,7 @@ option go_package = "Trashed/proto";
 
 service GameService {
     rpc CreateGame (Empty) returns (GameCode); // Nuevo método para crear partidas
-    rpc JoinGame (PlayerData) returns (stream PlayerData);
+    rpc JoinGame (PlayerData) returns (stream GameData);
     rpc SendState (PlayerState) returns (GameState);
     rpc GetGameState (Empty) returns (GameState);
 }
@@ -16,12 +16,18 @@ message GameCode {
     string code = 1; // Código único de la partida
 }
 
+message GameData {
+  string code = 1;                     // Unique game code
+  repeated PlayerData players = 2;     // List of players in the game
+}
+
 message PlayerData{
     string player_uuid = 1;
     int64 timestamp = 2;     //For sync
     string username = 3;
     string color = 4;
     int32 slot = 5;
+    string game_code= 6; // Código de la partida a la que se une
 }
 
 message GameState{
