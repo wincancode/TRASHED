@@ -1,33 +1,17 @@
 import grpc
 import pygame
-from connectivity import request_game_code_from_server
+from connectivity import request_game_code_from_server, connect_to_server
 import server.service_pb2 as service_pb2
 import server.service_pb2_grpc as service_pb2_grpc
 import settings as stt
 import sys
-import random
-import os
+import threading
+
 
 
 screen_width, screen_height = stt.GAME_WIDTH, stt.GAME_HEIGHT
 screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
-
-def connect_to_server(player_id, player_name):
-    """Connect to the server and handle the JoinGame response."""
-    with grpc.insecure_channel('localhost:50051') as channel:
-        stub = service_pb2_grpc.GameServiceStub(channel)
-        try:
-            # Call JoinGame and handle the streaming response
-            responses = stub.JoinGame(service_pb2.PlayerData(
-                player_uuid=player_id,
-                timestamp=1234567890,  # Replace with actual timestamp if needed
-                username=player_name,
-            ))
-            for response in responses:
-                print(f"Received update: {response}")
-        except grpc.RpcError as e:
-            print(f"Stream closed with error: {e}")
 
 def send_game_state_to_server(game_code, ships):
     """Send the created game state to the server."""
@@ -105,82 +89,117 @@ def show_start_screen():
         clock.tick(60)
 
 def show_create_game_screen():
-    font_title = pygame.font.Font(None, 74)
-    font_code = pygame.font.Font(None, 50)
+    # Mostrar pantalla para ingresar datos del jugador
+    player_id, player_name = show_player_data_screen()
 
-    # Generar un código de partida aleatorio
+    # Solicitar el código de partida al servidor
     game_code = request_game_code_from_server()
+    if not game_code:
+        print("Error al crear la partida.")
+        return
 
-    # Arreglo de naves (máximo 3)
-    ships = ["red", "blue"]  # Colores de las naves
+    # Mostrar pantalla de espera
+    show_waiting_screen(game_code, player_id, player_name)
 
-    # Cargar imágenes de las naves
-    ship_images = {
-        "red": pygame.image.load(stt.SHIP_DEFAULT_SPRITE),
-        "blue": pygame.image.load(stt.SHIP_DEFAULT_SPRITE),
-        "green": pygame.image.load(stt.SHIP_DEFAULT_SPRITE)
-    }
 
-    # Escalar imágenes de las naves
-    for color in ship_images:
-        ship_images[color] = pygame.transform.scale(ship_images[color], (50, 50))
+def show_join_game_screen():
+    font = pygame.font.Font(None, 50)
+    input_box_id = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 120, 300, 50)
+    input_box_name = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 60, 300, 50)
+    input_box_code = pygame.Rect(screen_width // 2 - 150, screen_height // 2, 300, 50)
+    button_box = pygame.Rect(screen_width // 2 - 100, screen_height // 2 + 80, 200, 50)
+
+    color_inactive = stt.BLUE
+    color_active = stt.WHITE
+    color_button = stt.GREEN
+    active_id = False
+    active_name = False
+    active_code = False
+    player_id = ""
+    player_name = ""
+    game_code = ""
 
     while True:
         screen.fill(stt.BLACK)
 
-        # Dibujar el título
-        title_text = font_title.render("Crear Partida", True, stt.WHITE)
-        title_rect = title_text.get_rect(center=(screen_width // 2, screen_height // 4))
-        screen.blit(title_text, title_rect)
+        # Dibujar los cuadros de texto y el botón
+        pygame.draw.rect(screen, color_active if active_id else color_inactive, input_box_id, 2)
+        pygame.draw.rect(screen, color_active if active_name else color_inactive, input_box_name, 2)
+        pygame.draw.rect(screen, color_active if active_code else color_inactive, input_box_code, 2)
+        pygame.draw.rect(screen, color_button, button_box)
 
-        # Dibujar el código de partida
-        code_text = font_code.render(f"Código de partida: {game_code}", True, stt.WHITE)
-        code_rect = code_text.get_rect(center=(screen_width // 2, screen_height // 2 - 50))
-        screen.blit(code_text, code_rect)
+        # Renderizar texto
+        id_text = font.render(player_id, True, stt.WHITE)
+        name_text = font.render(player_name, True, stt.WHITE)
+        code_text = font.render(game_code, True, stt.WHITE)
+        button_text = font.render("Unirse", True, stt.WHITE)
 
-        # Dibujar las naves con separaciones
-        start_x = screen_width // 2 - 100
-        y_position = screen_height // 2 + 20
-        for i in range(3):  # Siempre iterar hasta 3 para mostrar divisores
-            x_position = start_x + i * 100
-            if i < len(ships):
-                color = ships[i]
-                screen.blit(ship_images[color], (x_position, y_position))
+        screen.blit(id_text, (input_box_id.x + 10, input_box_id.y + 10))
+        screen.blit(name_text, (input_box_name.x + 10, input_box_name.y + 10))
+        screen.blit(code_text, (input_box_code.x + 10, input_box_code.y + 10))
+        screen.blit(button_text, (button_box.x + 50, button_box.y + 10))
 
-            # Dibujar separadores
-            if i < 2:  # Mostrar separadores entre las posiciones
-                separator_text = font_code.render("/", True, stt.WHITE)
-                separator_rect = separator_text.get_rect(center=(x_position + 75, y_position + 25))
-                screen.blit(separator_text, separator_rect)
-
-        # Dibujar botón de "Empezar partida"
-        button_width, button_height = 200, 50
-        button_x = screen_width - button_width - 20
-        button_y = screen_height - button_height - 20
-        button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-        pygame.draw.rect(screen, stt.BLUE, button_rect)
-
-        button_text = font_code.render("Empezar", True, stt.WHITE)
-        button_text_rect = button_text.get_rect(center=button_rect.center)
-        screen.blit(button_text, button_text_rect)
-
-        # Detectar clic en el botón
-        mouse_pos = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()[0]
-        if button_rect.collidepoint(mouse_pos) and click:
-            print("Partida iniciada")
-            return
+        pygame.display.flip()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box_id.collidepoint(event.pos):
+                    active_id = True
+                    active_name = False
+                    active_code = False
+                elif input_box_name.collidepoint(event.pos):
+                    active_name = True
+                    active_id = False
+                    active_code = False
+                elif input_box_code.collidepoint(event.pos):
+                    active_code = True
+                    active_id = False
+                    active_name = False
+                elif button_box.collidepoint(event.pos):
+                    # Validar que los campos no estén vacíos
+                    if player_id and player_name and game_code:
+                        # Mostrar pantalla de espera
+                        show_waiting_screen(game_code, player_id, player_name)
+                        return
+                    else:
+                        print("¡Todos los campos son obligatorios!")
+                else:
+                    active_id = False
+                    active_name = False
+                    active_code = False
+            if event.type == pygame.KEYDOWN:
+                if active_id:
+                    if event.key == pygame.K_BACKSPACE:
+                        player_id = player_id[:-1]
+                    else:
+                        player_id += event.unicode
+                elif active_name:
+                    if event.key == pygame.K_BACKSPACE:
+                        player_name = player_name[:-1]
+                    else:
+                        player_name += event.unicode
+                elif active_code:
+                    if event.key == pygame.K_BACKSPACE:
+                        game_code = game_code[:-1]
+                    else:
+                        game_code += event.unicode
 
-        pygame.display.flip()
-        clock.tick(60)
+        clock.tick(30)
 
+def show_game_over_screen(screen, screen_width, screen_height):
+    """Display the Game Over screen."""
+    font = pygame.font.Font(None, 74)
+    text = font.render("Game Over", True, stt.WHITE)
+    text_rect = text.get_rect(center=(screen_width // 2, screen_height // 2))
+    screen.fill(stt.BLACK)
+    screen.blit(text, text_rect)
+    pygame.display.flip()
+    pygame.time.wait(3000)  # Wait for 3 seconds
 
-def show_join_game_screen():
+def show_player_data_screen():
     font = pygame.font.Font(None, 50)
     input_box_id = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 60, 300, 50)
     input_box_name = pygame.Rect(screen_width // 2 - 150, screen_height // 2, 300, 50)
@@ -197,14 +216,15 @@ def show_join_game_screen():
     while True:
         screen.fill(stt.BLACK)
 
+        # Dibujar los cuadros de texto y el botón
         pygame.draw.rect(screen, color_active if active_id else color_inactive, input_box_id, 2)
         pygame.draw.rect(screen, color_active if active_name else color_inactive, input_box_name, 2)
         pygame.draw.rect(screen, color_button, button_box)
 
-        # Render text
+        # Renderizar texto
         id_text = font.render(player_id, True, stt.WHITE)
         name_text = font.render(player_name, True, stt.WHITE)
-        button_text = font.render("Join Game", True, stt.WHITE)
+        button_text = font.render("Crear Partida", True, stt.WHITE)
 
         screen.blit(id_text, (input_box_id.x + 10, input_box_id.y + 10))
         screen.blit(name_text, (input_box_name.x + 10, input_box_name.y + 10))
@@ -224,12 +244,11 @@ def show_join_game_screen():
                     active_name = True
                     active_id = False
                 elif button_box.collidepoint(event.pos):
-                    # Connect to the server
+                    # Validar que los campos no estén vacíos
                     if player_id and player_name:
-                        connect_to_server(player_id, player_name)
+                        return player_id, player_name
                     else:
-                        print("Player ID and Name are required!")
-                    return
+                        print("¡El ID y el nombre son obligatorios!")
                 else:
                     active_id = False
                     active_name = False
@@ -247,12 +266,44 @@ def show_join_game_screen():
 
         clock.tick(30)
 
-def show_game_over_screen(screen, screen_width, screen_height):
-    """Display the Game Over screen."""
-    font = pygame.font.Font(None, 74)
-    text = font.render("Game Over", True, stt.WHITE)
-    text_rect = text.get_rect(center=(screen_width // 2, screen_height // 2))
-    screen.fill(stt.BLACK)
-    screen.blit(text, text_rect)
-    pygame.display.flip()
-    pygame.time.wait(3000)  # Wait for 3 seconds
+def show_waiting_screen(game_code, player_id, player_name):
+    font = pygame.font.Font(None, 50)
+    players = []  # Lista de jugadores conectados
+
+    def update_players(new_players):
+        nonlocal players
+        players = new_players  # Almacenar los objetos completos de tipo PlayerData
+        print(f"Jugadores conectados: {[player.username for player in players]}")
+
+    # Iniciar un hilo para escuchar los mensajes del servidor
+    thread = threading.Thread(target=connect_to_server, args=(player_id, player_name, game_code, update_players))
+    thread.daemon = True
+    thread.start()
+
+    while True:
+        screen.fill(stt.BLACK)
+
+        # Mostrar el código de la partida
+        code_text = font.render(f"Código de partida: {game_code}", True, stt.WHITE)
+        code_rect = code_text.get_rect(center=(screen_width // 2, screen_height // 2 - 100))
+        screen.blit(code_text, code_rect)
+
+        # Mostrar mensaje de espera
+        waiting_text = font.render("Esperando a otros jugadores...", True, stt.WHITE)
+        waiting_rect = waiting_text.get_rect(center=(screen_width // 2, screen_height // 2 - 50))
+        screen.blit(waiting_text, waiting_rect)
+
+        # Mostrar la lista de jugadores conectados
+        for i, player in enumerate(players):
+            player_text = font.render(f"Jugador {i + 1}: {player.username}", True, stt.WHITE)
+            player_rect = player_text.get_rect(center=(screen_width // 2, screen_height // 2 + i * 30))
+            screen.blit(player_text, player_rect)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        clock.tick(30)

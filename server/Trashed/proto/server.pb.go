@@ -72,6 +72,7 @@ type PlayerData struct {
 	Username      string                 `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
 	Color         string                 `protobuf:"bytes,4,opt,name=color,proto3" json:"color,omitempty"`
 	Slot          int32                  `protobuf:"varint,5,opt,name=slot,proto3" json:"slot,omitempty"`
+	GameCode      string                 `protobuf:"bytes,6,opt,name=game_code,json=gameCode,proto3" json:"game_code,omitempty"` // Código de la partida a la que se une
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -139,6 +140,13 @@ func (x *PlayerData) GetSlot() int32 {
 		return x.Slot
 	}
 	return 0
+}
+
+func (x *PlayerData) GetGameCode() string {
+	if x != nil {
+		return x.GameCode
+	}
+	return ""
 }
 
 type GameData struct {
@@ -575,7 +583,7 @@ const file_server_proto_rawDesc = "" +
 	"\n" +
 	"\fserver.proto\x12\x06server\"\x1e\n" +
 	"\bGameCode\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"\x91\x01\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\"\xae\x01\n" +
 	"\n" +
 	"PlayerData\x12\x1f\n" +
 	"\vplayer_uuid\x18\x01 \x01(\tR\n" +
@@ -583,7 +591,8 @@ const file_server_proto_rawDesc = "" +
 	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp\x12\x1a\n" +
 	"\busername\x18\x03 \x01(\tR\busername\x12\x14\n" +
 	"\x05color\x18\x04 \x01(\tR\x05color\x12\x12\n" +
-	"\x04slot\x18\x05 \x01(\x05R\x04slot\"L\n" +
+	"\x04slot\x18\x05 \x01(\x05R\x04slot\x12\x1b\n" +
+	"\tgame_code\x18\x06 \x01(\tR\bgameCode\"L\n" +
 	"\bGameData\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12,\n" +
 	"\aplayers\x18\x02 \x03(\v2\x12.server.PlayerDataR\aplayers\"\x9e\x01\n" +
@@ -615,11 +624,11 @@ const file_server_proto_rawDesc = "" +
 	"\x04posX\x18\x01 \x01(\x05R\x04posX\x12\x12\n" +
 	"\x04posY\x18\x02 \x01(\x05R\x04posY\x12\x14\n" +
 	"\x05angle\x18\x03 \x01(\x05R\x05angle\"\a\n" +
-	"\x05Empty2r\n" +
+	"\x05Empty2p\n" +
 	"\vGameService\x12-\n" +
 	"\n" +
-	"CreateGame\x12\r.server.Empty\x1a\x10.server.GameCode\x124\n" +
-	"\bJoinGame\x12\x12.server.PlayerData\x1a\x12.server.PlayerData0\x01B\x0fZ\rTrashed/protob\x06proto3"
+	"CreateGame\x12\r.server.Empty\x1a\x10.server.GameCode\x122\n" +
+	"\bJoinGame\x12\x12.server.PlayerData\x1a\x10.server.GameData0\x01B\x0fZ\rTrashed/protob\x06proto3"
 
 var (
 	file_server_proto_rawDescOnce sync.Once
@@ -653,7 +662,7 @@ var file_server_proto_depIdxs = []int32{
 	8, // 4: server.GameService.CreateGame:input_type -> server.Empty
 	1, // 5: server.GameService.JoinGame:input_type -> server.PlayerData
 	0, // 6: server.GameService.CreateGame:output_type -> server.GameCode
-	1, // 7: server.GameService.JoinGame:output_type -> server.PlayerData
+	2, // 7: server.GameService.JoinGame:output_type -> server.GameData
 	6, // [6:8] is the sub-list for method output_type
 	4, // [4:6] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name

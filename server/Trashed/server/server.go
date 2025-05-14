@@ -3,6 +3,7 @@ package main
 import (
 	"Trashed/proto"
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"net"
@@ -90,40 +91,45 @@ func addPlayer(in *proto.PlayerData) {
 }
 
 func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGameServer) error {
-	var mu sync.Mutex
+	gameCode := in.GameCode
 
-	// Add the player to the list of clients
-	mu.Lock()
-	addPlayer(in)
-	// Create a new channel for the player
-	joinUpdatesChannel := make(chan *proto.PlayerData, 1)
-	JoinUpdatesChannels = append(JoinUpdatesChannels, joinUpdatesChannel)
-	mu.Unlock()
-
-	mu.Lock()
-	// Send the player data to all clients
-	for _, subscriber := range JoinUpdatesChannels {
-		subscriber <- in
+	// Verificar si la partida existe
+	s.mu.Lock()
+	game, exists := s.games[gameCode]
+	if !exists {
+		s.mu.Unlock()
+		log.Printf("Partida no encontrada: %s", gameCode)
+		return fmt.Errorf("Partida no encontrada")
 	}
-	mu.Unlock()
 
+	// Agregar el jugador a la partida
+	player := &proto.PlayerData{
+		PlayerUuid: in.PlayerUuid,
+		Username:   in.Username,
+		Color:      "green",
+		Slot:       int32(len(game.Players)),
+		GameCode:   gameCode,
+	}
+	game.Players = append(game.Players, player)
+	s.mu.Unlock()
+
+	log.Printf("Nuevo jugador agregado: %s, username: %s, slot: %d", player.PlayerUuid, player.Username, player.Slot)
+
+	// Enviar actualizaciones de la lista de jugadores conectados
 	for {
-		select {
-		case player := <-joinUpdatesChannel:
-			// Send the player data to the client
-			err := stream.Send(player)
-			if err != nil {
-				log.Printf("Error sending player data to %s: %v", in.PlayerUuid, err)
-				return err
-			}
-		default:
-			// Optionally, send a heartbeat or perform other checks
-			err := stream.Context().Err()
-			if err != nil {
-				log.Printf("Connection lost for player %s: %v", in.PlayerUuid, err)
-				return err
-			}
+		s.mu.Lock()
+		gameData := &proto.GameData{
+			Code:    gameCode,
+			Players: game.Players,
 		}
+		s.mu.Unlock()
+
+		if err := stream.Send(gameData); err != nil {
+			log.Printf("Error enviando datos de la partida: %v", err)
+			return err
+		}
+
+		time.Sleep(1 * time.Second) // Enviar actualizaciones cada segundo
 	}
 }
 

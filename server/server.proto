@@ -11,7 +11,7 @@ message GameCode {
 
 service GameService {
   rpc CreateGame (Empty) returns (GameCode);
-  rpc JoinGame (PlayerData) returns (stream PlayerData);
+  rpc JoinGame (PlayerData) returns (stream GameData);
 }
 
 message PlayerData{
@@ -20,6 +20,7 @@ message PlayerData{
     string username = 3;
     string color = 4;
     int32 slot = 5;
+    string game_code= 6; // Código de la partida a la que se une
 }
 
 message GameData {
