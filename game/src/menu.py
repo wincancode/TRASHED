@@ -151,7 +151,7 @@ def show_create_game_screen():
 
     # Mostrar pantalla de espera
     show_waiting_screen(game_code, player_id, player_name)
-    return player_id, game_code
+    return '',player_id, game_code
 
 def show_join_game_screen():
     font = pygame.font.Font(None, 50)
@@ -235,9 +235,9 @@ def show_join_game_screen():
                     if player_id and player_name and game_code:
                         # Mostrar pantalla de espera
                         show_waiting_screen(game_code, player_id, player_name)
-                        return  player_id, game_code
+                        return  '', player_id, game_code
                     else:
-                        return player_id, player_name, game_code
+                        return '', player_id, game_code
                 elif back_button_box.collidepoint(event.pos):
                     # Regresar al menú principal
                     return "back"
