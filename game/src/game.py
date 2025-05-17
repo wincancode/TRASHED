@@ -1,19 +1,29 @@
 
 
 
+import threading
 import pygame
 from entities.ship import Ship
 from entities.asteroid import Asteroid
 from entities.powerup import apply_powerup_effect
 from collision import check_collisions, handle_bullet_asteroid_collisions, check_powerup_collisions
+from connectivity import join_input_updates
 from menu import show_game_over_screen
 import settings as stt
 from level import Level
 from ui import draw_text, draw_progress_bar
 
-def start_game(screen,screen_width,screen_height):
-    ship1 = Ship(1)
 
+
+
+def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_players=[]):
+    
+    ship1 = Ship('1')
+
+    thread = threading.Thread(target=join_input_updates, args=(game_code,user_uuid))
+    thread.start()
+
+    
     clock = pygame.time.Clock()
 
     asteroids = []
@@ -24,16 +34,14 @@ def start_game(screen,screen_width,screen_height):
 
     MIN_ASTEROIDS = 10
 
+
     for i in range(10):
         asteroids.append(Asteroid(i))
-
-
 
     def getInputs(deltaTime):
         keys = pygame.key.get_pressed()
         ship1.control(keys, bullets)
         ship1.updatePosition(deltaTime)
-
 
     score = 0
 
@@ -69,10 +77,10 @@ def start_game(screen,screen_width,screen_height):
         # Limpiar la pantalla
         screen.fill(stt.BLACK)
 
-        # Dibujar asteroides
-        for asteroid in asteroids:
-            asteroid.Update(delta_time, screen)
-            asteroid.draw_health(screen)
+        #!!!!!!!!!!!!!!! Dibujar asteroides
+        # for asteroid in asteroids:
+        #     asteroid.Update(delta_time, screen)
+        #     asteroid.draw_health(screen)
 
         # Dibujar balas
         for bullet in bullets[:]:

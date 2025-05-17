@@ -4,7 +4,6 @@ import (
 	"Trashed/Trashed/proto"
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"net"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -140,52 +140,71 @@ func (s *server) StartGame(ctx context.Context, in *proto.GameCode) (*proto.Bool
 
 
 
-func (s *server) JoinInputUpdates(stream proto.GameService_JoinInputUpdatesServer) (error) {
-	//manejar datos de entrada
-	for{
-		in,err := stream.Recv()
+func (s *server) JoinInputUpdates(stream proto.GameService_JoinInputUpdatesServer) error {
+	
+	md,ok := metadata.FromIncomingContext(stream.Context())
+	if !ok {
+		return fmt.Errorf("metadata not found")
+	}
+	
+	gameCode := md.Get("game_code")
+	playerUuid := md.Get("player_uuid")
+	
+	if len(playerUuid) == 0 {
+		return fmt.Errorf("player uuid not found")
+	}
+
+	if len(gameCode) == 0 {
+		return fmt.Errorf("game code not found")
+	}
 
 
-		//manage errors
-		if err == io.EOF {
-			log.Println("Stream closed by client")
-			return nil
-		}
+	gameCodeStr := gameCode[0]
+	playerUuidStr := playerUuid[0]
 
-		if err != nil {
-			log.Printf("Error receiving input: %v", err)
-			return err
-		}
+	log.Printf("Player UUID: %s, Game Code: %s", playerUuidStr, gameCodeStr)
 
 
-		// Check if the game exists
-		s.mu.Lock()
-		game, exists := s.games[in.Code]
-		if !exists {
-			s.mu.Unlock()
-			log.Printf("Game not found: %s", in.Code)
-			return fmt.Errorf("game not found")
-		}
+	s.mu.Lock()
+	game, exists := s.games[gameCodeStr]
 
-		//if exist, verify if the user is in the subscriber list 
-				
-		// Add the subscriber if not already present
-		if _, ok := game.SubscribedInputStreams[in.Player.PlayerUuid]; !ok {
-			game.SubscribedInputStreams[in.Player.PlayerUuid] = stream
-			log.Printf("Added subscriber: %s", in.Player.PlayerUuid)
-		}
-
+	if !exists {
 		s.mu.Unlock()
+		log.Printf("Partida no encontrada: %s", gameCodeStr)
+		return fmt.Errorf("partida no encontrada")
+	}
 
-		log.Printf("Received input in game %s, for player %s: %v", in.Code, in.Player.PlayerUuid, in.Input)
+	// Check if the player is already subscribed
+	if _, exists := game.SubscribedInputStreams[playerUuidStr]; exists {
+		s.mu.Unlock()
+		log.Printf("Player already subscribed: %s", playerUuidStr)
+		return fmt.Errorf("player already subscribed")
+	}
 
-		for playerUUID, sub_stream := range game.SubscribedInputStreams {
-			// playerUUID is the key (string)
-			// stream is the value (proto.GameService_JoinInputUpdatesServer)
-			log.Printf("sending to subscriber: %s", playerUUID)
-			sub_stream.Send(in)
-		} 
-	}	
+	// Subscribe the player to input updates
+	game.SubscribedInputStreams[playerUuidStr] = stream
+	s.mu.Unlock()
+	log.Printf("Player subscribed to input updates: %s", playerUuidStr)
+
+	for {
+        in, err := stream.Recv()
+        if err != nil {
+            return err
+        }
+        log.Printf("Received: %v", in)
+        // Echo back the input to all subscribed players
+        for _, subStream := range game.SubscribedInputStreams {
+			err := subStream.Send(in)
+			if err != nil {
+				log.Printf("Error sending input to player: %v", err)
+			}
+		}
+
+		
+				
+
+
+    }
 }
 
 

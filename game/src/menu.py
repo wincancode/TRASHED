@@ -102,7 +102,7 @@ def show_create_game_screen():
 
     # Mostrar pantalla de espera
     show_waiting_screen(game_code, player_id, player_name)
-    return
+    return player_id, game_code
 
 def show_join_game_screen():
     font = pygame.font.Font(None, 50)
@@ -165,7 +165,7 @@ def show_join_game_screen():
                     if player_id and player_name and game_code:
                         # Mostrar pantalla de espera
                         show_waiting_screen(game_code, player_id, player_name)
-                        return
+                        return  player_id, game_code
                     else:
                         print("¡Todos los campos son obligatorios!")
                 else:
@@ -321,4 +321,4 @@ def show_waiting_screen(game_code, player_id, player_name):
         clock.tick(30)
     
     print("Game started!")
-    return
+    return 

@@ -20,15 +20,17 @@ pygame.display.set_caption("Moving Rectangle")
 
 Mostrar_inicio = True
 
+user_uuid = ''
+game_code = ''
 
 # Main game loop
 if Mostrar_inicio:
     start_option = show_start_screen()
     if start_option == "join":
-        show_join_game_screen()
+        user_uuid, game_code = show_join_game_screen()
     elif start_option == "create":
-        show_create_game_screen()
+        user_uuid, game_code = show_create_game_screen()
     Mostrar_inicio = False
 
-start_game(screen,screen_width,screen_height)
+start_game(screen,screen_width,screen_height,game_code,user_uuid)
 

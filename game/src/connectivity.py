@@ -1,6 +1,7 @@
 
+from encodings.punycode import T
 import threading
-from time import time
+import time
 import grpc
 import player
 import server.service_pb2 as service_pb2
@@ -46,7 +47,9 @@ def connect_to_server(player_id, player_name, game_code, update_players_callback
                 update_players_callback(response.players, response.started)
 
                 # #prevent creating multiple connections
-                if (response.started):                    
+                if (response.started):        
+                    print("Game started, closing connection.")
+                    channel.close()    
                     return
         except grpc.RpcError as e:
             print(f"Stream closed with error: {e}")
@@ -62,18 +65,28 @@ def request_start_game(game_code):
             print(f"Failed to start game: {e}")
             return False
 
-def join_input_updates(stub, code, player_uuid):
-    def request_messages():
-        while True:
-            # Yield messages to send to the server
-            yield service_pb2.PlayerState(
-               code=code,
-               player=service_pb2.PlayerData(player_uuid=player_uuid),
-               input=service_pb2.Input(move=False)  # or your actual input data
-            )
-            time.sleep(1)  # Example: send every second
 
-    responses = stub.JoinInputUpdates(request_messages())
+def generate_player_states(player_uuid):
+    for i in range(1000000000000000000000000):
+        yield service_pb2.PlayerState(
+            code="GAME123",
+            player=service_pb2.PlayerData(player_uuid=player_uuid, username=f"user"),
+            timestamp=123456789 + i,
+            input=service_pb2.Input(move=True)
+        )
+
+        # Simulate some delay
+        time.sleep(1)
+
+def join_input_updates(code, player_uuid):
+    channel = grpc.insecure_channel(DIRECTION)
+    stub = service_pb2_grpc.GameServiceStub(channel)
+
+    metadata = [
+        ('game_code', code),
+        ('player_uuid', player_uuid)
+    ]
+
+    responses = stub.JoinInputUpdates(generate_player_states(player_uuid), metadata=metadata)
     for response in responses:
-        print("Received from server:", response)
-
+        print("Received:", response)
