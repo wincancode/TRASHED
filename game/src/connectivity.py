@@ -42,7 +42,6 @@ def connect_to_server(player_id, player_name, game_code, update_players_callback
 
 
             for response in responses:
-                print(f"Received response: {response}")
                 # Pasar la lista de jugadores al callback
                 update_players_callback(response.players, response.started)
 
@@ -78,7 +77,7 @@ def generate_player_states(player_uuid):
         # Simulate some delay
         time.sleep(1)
 
-def join_input_updates(code, player_uuid):
+def join_input_updates(code, player_uuid, obtain_input_callback,player_input_iterator):
     channel = grpc.insecure_channel(DIRECTION)
     stub = service_pb2_grpc.GameServiceStub(channel)
 
@@ -87,6 +86,6 @@ def join_input_updates(code, player_uuid):
         ('player_uuid', player_uuid)
     ]
 
-    responses = stub.JoinInputUpdates(generate_player_states(player_uuid), metadata=metadata)
+    responses = stub.JoinInputUpdates(player_input_iterator(), metadata=metadata)
     for response in responses:
-        print("Received:", response)
+        obtain_input_callback(response)

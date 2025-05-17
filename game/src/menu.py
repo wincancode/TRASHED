@@ -150,8 +150,8 @@ def show_create_game_screen():
         return
 
     # Mostrar pantalla de espera
-    show_waiting_screen(game_code, player_id, player_name)
-    return '',player_id, game_code
+    online_players = show_waiting_screen(game_code, player_id, player_name)
+    return '',player_id, game_code, online_players
 
 def show_join_game_screen():
     font = pygame.font.Font(None, 50)
@@ -234,10 +234,10 @@ def show_join_game_screen():
                     # Validar que los campos no estén vacíos
                     if player_id and player_name and game_code:
                         # Mostrar pantalla de espera
-                        show_waiting_screen(game_code, player_id, player_name)
-                        return  '', player_id, game_code
+                        online_players = show_waiting_screen(game_code, player_id, player_name)
+                        return  '', player_id, game_code, online_players
                     else:
-                        return '', player_id, game_code
+                        return '', '', ''
                 elif back_button_box.collidepoint(event.pos):
                     # Regresar al menú principal
                     return "back"
@@ -371,7 +371,7 @@ def show_waiting_screen(game_code, player_id, player_name):
     def update_players(new_players,started_flag):
         nonlocal players
         players = new_players  # Almacenar los objetos completos de tipo PlayerData
-        print(f"Jugadores conectados: {[player.username for player in players]}")
+        print(f"Jugadores conectados: {[player for player in players]}")
 
         if(started_flag):
             print('assigning game started')
@@ -399,7 +399,10 @@ def show_waiting_screen(game_code, player_id, player_name):
 
         # Mostrar la lista de jugadores conectados
         for i, player in enumerate(players):
-            player_text = font.render(f"Jugador {i + 1}: {player.username}", True, stt.WHITE)
+            color = stt.color_map.get(player.color, stt.WHITE)
+
+
+            player_text = font.render(f"Jugador {i + 1}: {player.username}", True, color)
             player_rect = player_text.get_rect(center=(screen_width // 2, screen_height // 2 + i * 30))
             screen.blit(player_text, player_rect)
 
@@ -416,4 +419,4 @@ def show_waiting_screen(game_code, player_id, player_name):
         clock.tick(30)
     
     print("Game started!")
-    return 
+    return players

@@ -84,11 +84,29 @@ func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGam
 		return fmt.Errorf("partida no encontrada")
 	}
 
+	//search for a color that is not used
+	usedColors := make(map[string]bool)
+
+	for _, player := range game.Data.Players {
+		usedColors[player.Color] = true
+	}
+
+	availableColors := []string{Red, Green, Blue, Yellow}
+	
+	var selectedColor string
+	
+	for _, color := range availableColors {
+		if !usedColors[color] {
+			selectedColor = color
+			break
+		}
+	}
+
 	// Agregar el jugador a la partida
 	player := &proto.PlayerData{
 		PlayerUuid: in.PlayerUuid,
 		Username:   in.Username,
-		Color:      "green",
+		Color:      selectedColor,
 		Slot:       int32(len(game.Data.Players)),
 		GameCode:   gameCode,
 	}
@@ -199,11 +217,6 @@ func (s *server) JoinInputUpdates(stream proto.GameService_JoinInputUpdatesServe
 				log.Printf("Error sending input to player: %v", err)
 			}
 		}
-
-		
-				
-
-
     }
 }
 

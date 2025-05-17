@@ -22,7 +22,14 @@ BLACK = (0, 0, 0)  # RGB color for black
 RED = (255, 0, 0)  # RGB color for red
 GREEN = (0, 255, 0)  # RGB color for green
 BLUE = (0, 0, 255)  # RGB color for blue
+YELLOW = (255, 255, 0)  # RGB color for yellow
 
+color_map = {
+    "green": GREEN,
+    "red": RED,
+    "blue": BLUE,
+    "yellow": YELLOW
+}
 
 # Ship constants 
 SHIP_BASE_SPEED = 80  # Base speed of the ship in units per second

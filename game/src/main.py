@@ -29,14 +29,14 @@ if Mostrar_inicio:
     while True:
         start_option = show_start_screen()
         if start_option == "join":
-            result, user_uuid, game_code = show_join_game_screen()
+            result, user_uuid, game_code, online_players = show_join_game_screen()
             if result == "back":
                 continue  # Volver al menú principal
         elif start_option == "create":
-            result, user_uuid, game_code = show_create_game_screen()
+            result, user_uuid, game_code, online_players = show_create_game_screen()
             if result == "back":
                 continue  # Volver al menú principal
         break
 
-start_game(screen, screen_width, screen_height, game_code, user_uuid)
+start_game(screen, screen_width, screen_height, game_code, user_uuid, online_players)
 

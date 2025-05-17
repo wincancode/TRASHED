@@ -14,34 +14,91 @@ from level import Level
 from ui import draw_text, draw_progress_bar
 
 
+def deencrypt_input(movement):
+    # Aquí puedes implementar la lógica para desencriptar el game_code
+    # Por ahora, simplemente lo devolvemos sin cambios
+    return game_code
+
 
 
 def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_players=[]):
-    
-    ship1 = Ship('1')
+    ships = []
 
-    thread = threading.Thread(target=join_input_updates, args=(game_code,user_uuid))
-    thread.start()
+    for player in online_players:
+        print(f"Jugador: {player.username} - UUID: {player.player_uuid} - Color: {player.color}")
+        ships.append(Ship(player.player_uuid, player.color))
+
+
+    # obtener la nave del jugador
+    ship1 = None
+    for ship in ships:
+        if ship.id == user_uuid:
+            ship1 = ship
+            break
+    
+    def obtain_inputs_callback(inputs):
+       print(f"Inputs recibidos: {inputs}")
+        # for ship in ships:
+        #     if ship.id == inputs.player_uuid:
+        #         ship.update_inputs(inputs)
+        #         break
+
+    
+
+
+    Input_updates_thread = threading.Thread(target=join_input_updates, args=(game_code,user_uuid,obtain_inputs_callback))
+    Input_updates_thread.start()
 
     
     clock = pygame.time.Clock()
 
     asteroids = []
-    bullets = []
     messages = []
     powerups = []
     released_asteroids = []
 
+    #!!!!!!!!!!
     MIN_ASTEROIDS = 10
 
 
     for i in range(10):
         asteroids.append(Asteroid(i))
 
-    def getInputs(deltaTime):
+
+    
+
+    def local_player_input_iterator():
+        while True:
+            # Aquí puedes implementar la lógica para obtener los inputs del jugador
+            # Por ahora, simplemente devolvemos un valor de ejemplo
+            yield {
+                "move": True,
+                "shoot": False,
+                "powerup": False
+            }
+
+    local_player_input_thread = threading.Thread(target=local_player_input_iterator)
+    local_player_input_thread.start()
+
+    local_player_inputs = [
+        {
+            "move": False,
+            "stride_left": False,
+            "stride_right": False,
+            "stop": False,
+            "is_shoot": False
+        }
+    ]
+
+    def getInputs(deltaTime) -> None:
         keys = pygame.key.get_pressed()
-        ship1.control(keys, bullets)
-        ship1.updatePosition(deltaTime)
+        actions = map()
+
+
+    # def getInputs(deltaTime):
+    #     keys = pygame.key.get_pressed()
+    #     ship1.control(keys)
+    #     ship1.updatePosition(deltaTime)
 
     score = 0
 
@@ -65,9 +122,10 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                 break
 
         # Manejar colisiones entre balas y asteroides
-        points, destroyed_count = handle_bullet_asteroid_collisions(bullets, asteroids, messages, powerups, released_asteroids)
-        score += points  # Sumar los puntos obtenidos al puntaje total
-        level.update(destroyed_count, asteroids)  # Actualizar el progreso del nivel
+        for ship in ships:
+            points, destroyed_count = handle_bullet_asteroid_collisions(ship.bullets, asteroids, messages, powerups, released_asteroids)
+            score += points  # Sumar los puntos obtenidos al puntaje total
+            level.update(destroyed_count, asteroids)  # Actualizar el progreso del nivel
 
         # Generar nuevos asteroides si el número es menor al mínimo
         while len(asteroids) < level.min_asteroids:
@@ -78,15 +136,9 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         screen.fill(stt.BLACK)
 
         #!!!!!!!!!!!!!!! Dibujar asteroides
-        # for asteroid in asteroids:
-        #     asteroid.Update(delta_time, screen)
-        #     asteroid.draw_health(screen)
-
-        # Dibujar balas
-        for bullet in bullets[:]:
-            bullet.Update(delta_time, screen)
-            if not bullet.active:
-                bullets.remove(bullet)
+        for asteroid in asteroids:
+            asteroid.Update(delta_time, screen)
+            asteroid.draw_health(screen)
 
         # Dibujar mensajes temporales
         for message in messages[:]:
@@ -119,7 +171,8 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
         # Dibujar la nave
         getInputs(delta_time)
-        ship1.draw(screen)
+        for ship in ships:
+            ship.draw(screen,delta_time)
 
         # Mostrar la puntuación acumulada
         draw_text(screen, f"Puntos: {score}", (10, 10), (255, 255, 255))
