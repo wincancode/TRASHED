@@ -1,6 +1,3 @@
-
-
-
 import pygame
 from entities.ship import Ship
 from entities.asteroid import Asteroid
