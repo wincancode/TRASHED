@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\x12\x06server\"\x1c\n\x0b\x42oolMessage\x12\r\n\x05value\x18\x01 \x01(\x08\"\x18\n\x08GameCode\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\"l\n\x10GameInputsStream\x12\x10\n\x08gameCode\x18\x01 \x01(\t\x12\"\n\x06player\x18\x02 \x01(\x0b\x32\x12.server.PlayerData\x12\"\n\x05input\x18\x03 \x01(\x0b\x32\x13.server.PlayerInput\"\x85\x01\n\nPlayerData\x12\x13\n\x0bplayer_uuid\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x10\n\x08username\x18\x03 \x01(\t\x12\r\n\x05\x63olor\x18\x04 \x01(\t\x12\x0c\n\x04slot\x18\x05 \x01(\x05\x12\x11\n\tgame_code\x18\x06 \x01(\t\x12\r\n\x05ready\x18\x07 \x01(\x08\"N\n\x08GameData\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\x12#\n\x07players\x18\x02 \x03(\x0b\x32\x12.server.PlayerData\x12\x0f\n\x07started\x18\x03 \x01(\x08\"`\n\x0bPlayerState\x12\x13\n\x0bplayer_uuid\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x0c\n\x04posX\x18\x03 \x01(\x05\x12\x0c\n\x04posY\x18\x04 \x01(\x05\x12\r\n\x05\x61ngle\x18\x05 \x01(\x05\"f\n\x0bPlayerInput\x12\x0c\n\x04move\x18\x01 \x01(\x08\x12\x13\n\x0bstride_left\x18\x02 \x01(\x08\x12\x14\n\x0cstride_right\x18\x03 \x01(\x08\x12\x0c\n\x04stop\x18\x04 \x01(\x08\x12\x10\n\x08is_shoot\x18\x05 \x01(\x08\"\x07\n\x05\x45mpty2\xa4\x01\n\x0bGameService\x12-\n\nCreateGame\x12\r.server.Empty\x1a\x10.server.GameCode\x12\x32\n\x08JoinGame\x12\x12.server.PlayerData\x1a\x10.server.GameData0\x01\x12\x32\n\tStartGame\x12\x10.server.GameCode\x1a\x13.server.BoolMessageB\x0fZ\rTrashed/protob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\x12\x06server\"\x1c\n\x0b\x42oolMessage\x12\r\n\x05value\x18\x01 \x01(\x08\"\x18\n\x08GameCode\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\"p\n\x0bPlayerState\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\x12\"\n\x06player\x18\x02 \x01(\x0b\x32\x12.server.PlayerData\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\x12\x1c\n\x05input\x18\x04 \x01(\x0b\x32\r.server.Input\"`\n\x05Input\x12\x0c\n\x04move\x18\x01 \x01(\x08\x12\x13\n\x0bstride_left\x18\x02 \x01(\x08\x12\x14\n\x0cstride_right\x18\x03 \x01(\x08\x12\x0c\n\x04stop\x18\x04 \x01(\x08\x12\x10\n\x08is_shoot\x18\x05 \x01(\x08\"\x85\x01\n\nPlayerData\x12\x13\n\x0bplayer_uuid\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\x12\x10\n\x08username\x18\x03 \x01(\t\x12\r\n\x05\x63olor\x18\x04 \x01(\t\x12\x0c\n\x04slot\x18\x05 \x01(\x05\x12\x11\n\tgame_code\x18\x06 \x01(\t\x12\r\n\x05ready\x18\x07 \x01(\x08\"N\n\x08GameData\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\x12#\n\x07players\x18\x02 \x03(\x0b\x32\x12.server.PlayerData\x12\x0f\n\x07started\x18\x04 \x01(\x08\"\x07\n\x05\x45mpty2\xe6\x01\n\x0bGameService\x12-\n\nCreateGame\x12\r.server.Empty\x1a\x10.server.GameCode\x12\x32\n\x08JoinGame\x12\x12.server.PlayerData\x1a\x10.server.GameData0\x01\x12@\n\x10JoinInputUpdates\x12\x13.server.PlayerState\x1a\x13.server.PlayerState(\x01\x30\x01\x12\x32\n\tStartGame\x12\x10.server.GameCode\x1a\x13.server.BoolMessageB\x0fZ\rTrashed/protob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,18 +36,16 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_BOOLMESSAGE']._serialized_end=53
   _globals['_GAMECODE']._serialized_start=55
   _globals['_GAMECODE']._serialized_end=79
-  _globals['_GAMEINPUTSSTREAM']._serialized_start=81
-  _globals['_GAMEINPUTSSTREAM']._serialized_end=189
-  _globals['_PLAYERDATA']._serialized_start=192
-  _globals['_PLAYERDATA']._serialized_end=325
-  _globals['_GAMEDATA']._serialized_start=327
-  _globals['_GAMEDATA']._serialized_end=405
-  _globals['_PLAYERSTATE']._serialized_start=407
-  _globals['_PLAYERSTATE']._serialized_end=503
-  _globals['_PLAYERINPUT']._serialized_start=505
-  _globals['_PLAYERINPUT']._serialized_end=607
-  _globals['_EMPTY']._serialized_start=609
-  _globals['_EMPTY']._serialized_end=616
-  _globals['_GAMESERVICE']._serialized_start=619
-  _globals['_GAMESERVICE']._serialized_end=783
+  _globals['_PLAYERSTATE']._serialized_start=81
+  _globals['_PLAYERSTATE']._serialized_end=193
+  _globals['_INPUT']._serialized_start=195
+  _globals['_INPUT']._serialized_end=291
+  _globals['_PLAYERDATA']._serialized_start=294
+  _globals['_PLAYERDATA']._serialized_end=427
+  _globals['_GAMEDATA']._serialized_start=429
+  _globals['_GAMEDATA']._serialized_end=507
+  _globals['_EMPTY']._serialized_start=509
+  _globals['_EMPTY']._serialized_end=516
+  _globals['_GAMESERVICE']._serialized_start=519
+  _globals['_GAMESERVICE']._serialized_end=749
 # @@protoc_insertion_point(module_scope)

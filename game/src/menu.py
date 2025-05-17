@@ -1,3 +1,6 @@
+
+from operator import is_
+from time import time
 import grpc
 import pygame
 from connectivity import request_game_code_from_server, connect_to_server, request_start_game
@@ -31,7 +34,6 @@ def send_game_state_to_server(game_code, ships):
                 print(f"Server response: {response}")
         except grpc.RpcError as e:
             print(f"Failed to send game state: {e}")
-
 
 def draw_button(screen, text, x, y, width, height, font, color, hover_color, mouse_pos, click):
     button_rect = pygame.Rect(x, y, width, height)
@@ -100,7 +102,7 @@ def show_create_game_screen():
 
     # Mostrar pantalla de espera
     show_waiting_screen(game_code, player_id, player_name)
-
+    return
 
 def show_join_game_screen():
     font = pygame.font.Font(None, 50)
@@ -268,19 +270,26 @@ def show_player_data_screen():
 
 def show_waiting_screen(game_code, player_id, player_name):
     font = pygame.font.Font(None, 50)
+    is_game_started = False
     players = []  # Lista de jugadores conectados
 
-    def update_players(new_players):
+    def update_players(new_players,started_flag):
         nonlocal players
         players = new_players  # Almacenar los objetos completos de tipo PlayerData
         print(f"Jugadores conectados: {[player.username for player in players]}")
 
+        if(started_flag):
+            print('assigning game started')
+            nonlocal is_game_started
+            is_game_started = True
+
+
+
     # Iniciar un hilo para escuchar los mensajes del servidor
     thread = threading.Thread(target=connect_to_server, args=(player_id, player_name, game_code, update_players))
-    thread.daemon = True
     thread.start()
 
-    while True:
+    while not is_game_started:
         screen.fill(stt.BLACK)
 
         # Mostrar el código de la partida
@@ -306,7 +315,10 @@ def show_waiting_screen(game_code, player_id, player_name):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_H:
+                if event.key == pygame.K_k:
                     request_start_game(game_code)
                     
         clock.tick(30)
+    
+    print("Game started!")
+    return

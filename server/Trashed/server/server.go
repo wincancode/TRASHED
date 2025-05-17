@@ -4,6 +4,7 @@ import (
 	"Trashed/Trashed/proto"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net"
@@ -17,12 +18,18 @@ import (
 type server struct {
 	proto.UnimplementedGameServiceServer
 	mu    sync.Mutex
-	games map[string]*proto.GameData
+	games map[string]game
+}
+
+type game struct {
+	Data *proto.GameData
+	SubscribedInputStreams map[string]proto.GameService_JoinInputUpdatesServer 
 }
 
 func NewServer() *server {
 	return &server{
-		games: make(map[string]*proto.GameData),
+		games: make(map[string]game),
+		
 	}
 }
 
@@ -34,10 +41,6 @@ const (
 	Yellow = "yellow"
 )
 
-var (
-	players             []*proto.PlayerData
-	JoinUpdatesChannels []chan *proto.PlayerData
-)
 
 func generateGameCode() string {
 	rand.Seed(time.Now().UnixNano())
@@ -55,10 +58,13 @@ func (s *server) CreateGame(ctx context.Context, in *proto.Empty) (*proto.GameCo
 
 	// Generar un código único para la partida
 	gameCode := generateGameCode()
-	s.games[gameCode] = &proto.GameData{
-		Code:    gameCode,
-		Players: []*proto.PlayerData{},
-		Started: false,
+	s.games[gameCode] = game{
+		Data: &proto.GameData{
+			Code:    gameCode,
+			Players: []*proto.PlayerData{},
+			Started: false,
+		},
+		SubscribedInputStreams: make(map[string]proto.GameService_JoinInputUpdatesServer),
 	}
 
 	log.Printf("Game created with code: %s", gameCode)
@@ -83,10 +89,10 @@ func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGam
 		PlayerUuid: in.PlayerUuid,
 		Username:   in.Username,
 		Color:      "green",
-		Slot:       int32(len(game.Players)),
+		Slot:       int32(len(game.Data.Players)),
 		GameCode:   gameCode,
 	}
-	game.Players = append(game.Players, player)
+	game.Data.Players = append(game.Data.Players, player)
 	s.mu.Unlock()
 
 	log.Printf("Nuevo jugador agregado: %s, username: %s, slot: %d", player.PlayerUuid, player.Username, player.Slot)
@@ -96,15 +102,15 @@ func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGam
 		s.mu.Lock()
 		gameData := &proto.GameData{
 			Code:    gameCode,
-			Players: game.Players,
-			Started: game.Started,
+			Players: game.Data.Players,
+			Started: game.Data.Started,
 		}
 		s.mu.Unlock()
 
 		if err := stream.Send(gameData); err != nil {
 			log.Printf("Error enviando datos de la partida: %v", err)
 			return err
-		}
+		}	
 
 		time.Sleep(1 * time.Second) // Enviar actualizaciones cada segundo
 	}
@@ -123,13 +129,63 @@ func (s *server) StartGame(ctx context.Context, in *proto.GameCode) (*proto.Bool
 	}
 
 	// Marcar la partida como iniciada
-	game.Started = true
-
+	game.Data.Started = true
 	
 	log.Printf("Partida iniciada: %s", gameCode)
 	return &proto.BoolMessage{Value: true}, nil;
+}
 
 
+
+
+
+
+func (s *server) JoinInputUpdates(stream proto.GameService_JoinInputUpdatesServer) (error) {
+	//manejar datos de entrada
+	for{
+		in,err := stream.Recv()
+
+
+		//manage errors
+		if err == io.EOF {
+			log.Println("Stream closed by client")
+			return nil
+		}
+
+		if err != nil {
+			log.Printf("Error receiving input: %v", err)
+			return err
+		}
+
+
+		// Check if the game exists
+		s.mu.Lock()
+		game, exists := s.games[in.Code]
+		if !exists {
+			s.mu.Unlock()
+			log.Printf("Game not found: %s", in.Code)
+			return fmt.Errorf("game not found")
+		}
+
+		//if exist, verify if the user is in the subscriber list 
+				
+		// Add the subscriber if not already present
+		if _, ok := game.SubscribedInputStreams[in.Player.PlayerUuid]; !ok {
+			game.SubscribedInputStreams[in.Player.PlayerUuid] = stream
+			log.Printf("Added subscriber: %s", in.Player.PlayerUuid)
+		}
+
+		s.mu.Unlock()
+
+		log.Printf("Received input in game %s, for player %s: %v", in.Code, in.Player.PlayerUuid, in.Input)
+
+		for playerUUID, sub_stream := range game.SubscribedInputStreams {
+			// playerUUID is the key (string)
+			// stream is the value (proto.GameService_JoinInputUpdatesServer)
+			log.Printf("sending to subscriber: %s", playerUUID)
+			sub_stream.Send(in)
+		} 
+	}	
 }
 
 

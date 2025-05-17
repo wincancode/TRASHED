@@ -10,7 +10,7 @@ option go_package = "Trashed/proto";
 service GameService {
   rpc CreateGame (Empty) returns (GameCode);
   rpc JoinGame (PlayerData) returns (stream GameData);
-  //rpc JoinInputUpdates(stream GameInputsStream) returns(stream GameInputsStream);
+  rpc JoinInputUpdates(stream PlayerState) returns(stream PlayerState);
   rpc StartGame(GameCode) returns(BoolMessage);
 }
 
@@ -23,12 +23,22 @@ message GameCode{
   string code = 1;
 }
 
-
-message GameInputsStream{
-    string gameCode = 1;
+message PlayerState{
+    string code = 1;
     PlayerData player = 2;
-    PlayerInput input = 3;
+    int64 timestamp = 3;    //For sync
+    Input input = 4;
 }
+
+message Input{
+    bool move = 1;
+    bool stride_left = 2;
+    bool stride_right = 3;
+    bool stop = 4;
+    bool is_shoot =5;  
+}
+
+
 
 message PlayerData{
     string player_uuid = 1;
@@ -37,32 +47,19 @@ message PlayerData{
     string color = 4;
     int32 slot = 5;
     string game_code= 6; // Código de la partida a la que se une
-    bool ready = 7;
-    
+    bool ready = 7;   
 }
+
+
+
 
 message GameData {
   string code = 1;                     // Unique game code
   repeated PlayerData players = 2;     // List of players in the game
-  bool started = 3;
+  bool started = 4;
 }
 
 
-message PlayerState{
-    string player_uuid = 1;
-    int64 timestamp = 2;    //For sync
-    int32 posX = 3; 
-    int32 posY = 4;
-    int32 angle = 5;
-}
-
-message PlayerInput{
-  bool move = 1;
-  bool stride_left = 2;
-  bool stride_right = 3;
-  bool stop = 4;
-  bool is_shoot =5;  
-}
 
 
 message Empty{}

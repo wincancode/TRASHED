@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GameService_CreateGame_FullMethodName = "/server.GameService/CreateGame"
-	GameService_JoinGame_FullMethodName   = "/server.GameService/JoinGame"
-	GameService_StartGame_FullMethodName  = "/server.GameService/StartGame"
+	GameService_CreateGame_FullMethodName       = "/server.GameService/CreateGame"
+	GameService_JoinGame_FullMethodName         = "/server.GameService/JoinGame"
+	GameService_JoinInputUpdates_FullMethodName = "/server.GameService/JoinInputUpdates"
+	GameService_StartGame_FullMethodName        = "/server.GameService/StartGame"
 )
 
 // GameServiceClient is the client API for GameService service.
@@ -30,7 +31,7 @@ const (
 type GameServiceClient interface {
 	CreateGame(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GameCode, error)
 	JoinGame(ctx context.Context, in *PlayerData, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GameData], error)
-	// rpc JoinInputUpdates(stream GameInputsStream) returns(stream GameInputsStream);
+	JoinInputUpdates(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[PlayerState, PlayerState], error)
 	StartGame(ctx context.Context, in *GameCode, opts ...grpc.CallOption) (*BoolMessage, error)
 }
 
@@ -71,6 +72,19 @@ func (c *gameServiceClient) JoinGame(ctx context.Context, in *PlayerData, opts .
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type GameService_JoinGameClient = grpc.ServerStreamingClient[GameData]
 
+func (c *gameServiceClient) JoinInputUpdates(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[PlayerState, PlayerState], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &GameService_ServiceDesc.Streams[1], GameService_JoinInputUpdates_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[PlayerState, PlayerState]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GameService_JoinInputUpdatesClient = grpc.BidiStreamingClient[PlayerState, PlayerState]
+
 func (c *gameServiceClient) StartGame(ctx context.Context, in *GameCode, opts ...grpc.CallOption) (*BoolMessage, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BoolMessage)
@@ -87,7 +101,7 @@ func (c *gameServiceClient) StartGame(ctx context.Context, in *GameCode, opts ..
 type GameServiceServer interface {
 	CreateGame(context.Context, *Empty) (*GameCode, error)
 	JoinGame(*PlayerData, grpc.ServerStreamingServer[GameData]) error
-	// rpc JoinInputUpdates(stream GameInputsStream) returns(stream GameInputsStream);
+	JoinInputUpdates(grpc.BidiStreamingServer[PlayerState, PlayerState]) error
 	StartGame(context.Context, *GameCode) (*BoolMessage, error)
 	mustEmbedUnimplementedGameServiceServer()
 }
@@ -104,6 +118,9 @@ func (UnimplementedGameServiceServer) CreateGame(context.Context, *Empty) (*Game
 }
 func (UnimplementedGameServiceServer) JoinGame(*PlayerData, grpc.ServerStreamingServer[GameData]) error {
 	return status.Errorf(codes.Unimplemented, "method JoinGame not implemented")
+}
+func (UnimplementedGameServiceServer) JoinInputUpdates(grpc.BidiStreamingServer[PlayerState, PlayerState]) error {
+	return status.Errorf(codes.Unimplemented, "method JoinInputUpdates not implemented")
 }
 func (UnimplementedGameServiceServer) StartGame(context.Context, *GameCode) (*BoolMessage, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartGame not implemented")
@@ -158,6 +175,13 @@ func _GameService_JoinGame_Handler(srv interface{}, stream grpc.ServerStream) er
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type GameService_JoinGameServer = grpc.ServerStreamingServer[GameData]
 
+func _GameService_JoinInputUpdates_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GameServiceServer).JoinInputUpdates(&grpc.GenericServerStream[PlayerState, PlayerState]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GameService_JoinInputUpdatesServer = grpc.BidiStreamingServer[PlayerState, PlayerState]
+
 func _GameService_StartGame_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GameCode)
 	if err := dec(in); err != nil {
@@ -197,6 +221,12 @@ var GameService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "JoinGame",
 			Handler:       _GameService_JoinGame_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "JoinInputUpdates",
+			Handler:       _GameService_JoinInputUpdates_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "server.proto",
