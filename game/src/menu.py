@@ -1,9 +1,7 @@
-
-from operator import is_
-from time import time
 import grpc
 import pygame
 from connectivity import request_game_code_from_server, connect_to_server, request_start_game
+from background import create_background_asteroids, update_and_draw_asteroids
 import server.service_pb2 as service_pb2
 import server.service_pb2_grpc as service_pb2_grpc
 import settings as stt
@@ -15,6 +13,48 @@ import threading
 screen_width, screen_height = stt.GAME_WIDTH, stt.GAME_HEIGHT
 screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
+
+def show_main_menu(screen):
+    """Muestra el menú principal con asteroides moviéndose en el fondo."""
+    pygame.init()
+    clock = pygame.time.Clock()
+
+    # Configuración de fuentes
+    font_title = pygame.font.Font(None, 100)
+    font_message = pygame.font.Font(None, 50)
+
+    # Texto del título y mensaje
+    title_text = font_title.render("Space Z", True, stt.WHITE)
+    title_rect = title_text.get_rect(center=(stt.GAME_WIDTH // 2, stt.GAME_HEIGHT // 3))
+
+    message_text = font_message.render("Presiona Enter para Continuar", True, stt.WHITE)
+    message_rect = message_text.get_rect(center=(stt.GAME_WIDTH // 2, stt.GAME_HEIGHT // 2))
+
+    # Crear asteroides para el fondo
+    asteroids = create_background_asteroids(15)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:  # Presionar Enter para continuar
+                    running = False
+
+        # Limpiar pantalla
+        screen.fill(stt.BLACK)
+
+        # Actualizar y dibujar asteroides
+        delta_time = clock.tick(stt.GAME_FPS) / 1000.0  # Convertir a segundos
+        update_and_draw_asteroids(asteroids, screen, delta_time)
+
+        # Dibujar texto
+        screen.blit(title_text, title_rect)
+        screen.blit(message_text, message_rect)
+
+        pygame.display.flip()
 
 def send_game_state_to_server(game_code, ships):
     """Send the created game state to the server."""
@@ -53,16 +93,21 @@ def show_start_screen():
     font_title = pygame.font.Font(None, 74)
     font_button = pygame.font.Font(None, 50)
 
-    title_text = font_title.render("Titulo del Juego", True, stt.WHITE)
+    title_text = font_title.render("Space Z", True, stt.WHITE)
     title_rect = title_text.get_rect(center=(screen_width // 2, screen_height // 4))
 
     button_width, button_height = 300, 60
     button_spacing = 20
     button_x = (screen_width - button_width) // 2
     button_y = screen_height // 2
+    
+    asteroids = create_background_asteroids(15)
 
     while True:
         screen.fill(stt.BLACK)
+        
+        delta_time = clock.tick(stt.GAME_FPS) / 1000.0
+        update_and_draw_asteroids(asteroids, screen, delta_time)
 
         # Draw title
         screen.blit(title_text, title_rect)
@@ -94,6 +139,10 @@ def show_create_game_screen():
     # Mostrar pantalla para ingresar datos del jugador
     player_id, player_name = show_player_data_screen()
 
+    # Si el usuario presionó "Regresar", salir de la función
+    if player_id is None and player_name is None:
+        return "back"
+
     # Solicitar el código de partida al servidor
     game_code = request_game_code_from_server()
     if not game_code:
@@ -106,10 +155,15 @@ def show_create_game_screen():
 
 def show_join_game_screen():
     font = pygame.font.Font(None, 50)
-    input_box_id = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 120, 300, 50)
-    input_box_name = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 60, 300, 50)
-    input_box_code = pygame.Rect(screen_width // 2 - 150, screen_height // 2, 300, 50)
+    label_font = pygame.font.Font(None, 30)
+    error_font = pygame.font.Font(None, 25)
+
+    # Ajustar las posiciones de los cuadros de texto
+    input_box_id = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 230, 300, 50)
+    input_box_name = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 120, 300, 50)
+    input_box_code = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 10, 300, 50)
     button_box = pygame.Rect(screen_width // 2 - 100, screen_height // 2 + 80, 200, 50)
+    back_button_box = pygame.Rect(screen_width // 2 - 100, screen_height // 2 + 160, 200, 50)
 
     color_inactive = stt.BLUE
     color_active = stt.WHITE
@@ -120,26 +174,42 @@ def show_join_game_screen():
     player_id = ""
     player_name = ""
     game_code = ""
+    error_message = ""
 
     while True:
         screen.fill(stt.BLACK)
+
+        # Dibujar etiquetas con mayor separación
+        id_label = label_font.render("ID del jugador:", True, stt.WHITE)
+        name_label = label_font.render("Nombre del jugador:", True, stt.WHITE)
+        code_label = label_font.render("Código de partida:", True, stt.WHITE)
+        screen.blit(id_label, (input_box_id.x, input_box_id.y - 40))  # Separación ajustada
+        screen.blit(name_label, (input_box_name.x, input_box_name.y - 40))  # Separación ajustada
+        screen.blit(code_label, (input_box_code.x, input_box_code.y - 40))  # Separación ajustada
 
         # Dibujar los cuadros de texto y el botón
         pygame.draw.rect(screen, color_active if active_id else color_inactive, input_box_id, 2)
         pygame.draw.rect(screen, color_active if active_name else color_inactive, input_box_name, 2)
         pygame.draw.rect(screen, color_active if active_code else color_inactive, input_box_code, 2)
         pygame.draw.rect(screen, color_button, button_box)
+        pygame.draw.rect(screen, stt.RED, back_button_box)
 
         # Renderizar texto
         id_text = font.render(player_id, True, stt.WHITE)
         name_text = font.render(player_name, True, stt.WHITE)
         code_text = font.render(game_code, True, stt.WHITE)
         button_text = font.render("Unirse", True, stt.WHITE)
+        back_button_text = font.render("Regresar", True, stt.WHITE)
 
         screen.blit(id_text, (input_box_id.x + 10, input_box_id.y + 10))
         screen.blit(name_text, (input_box_name.x + 10, input_box_name.y + 10))
         screen.blit(code_text, (input_box_code.x + 10, input_box_code.y + 10))
         screen.blit(button_text, (button_box.x + 50, button_box.y + 10))
+        screen.blit(back_button_text, (back_button_box.x + 50, back_button_box.y + 10))
+        
+        if error_message:
+            error_text = error_font.render(error_message, True, stt.RED)
+            screen.blit(error_text, (screen_width // 2 - error_text.get_width() // 2, screen_height // 2 + 250))
 
         pygame.display.flip()
 
@@ -167,7 +237,10 @@ def show_join_game_screen():
                         show_waiting_screen(game_code, player_id, player_name)
                         return  player_id, game_code
                     else:
-                        print("¡Todos los campos son obligatorios!")
+                        return player_id, player_name, game_code
+                elif back_button_box.collidepoint(event.pos):
+                    # Regresar al menú principal
+                    return "back"
                 else:
                     active_id = False
                     active_name = False
@@ -203,9 +276,13 @@ def show_game_over_screen(screen, screen_width, screen_height):
 
 def show_player_data_screen():
     font = pygame.font.Font(None, 50)
-    input_box_id = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 60, 300, 50)
+    label_font = pygame.font.Font(None, 30)
+    error_font = pygame.font.Font(None, 25)
+    
+    input_box_id = pygame.Rect(screen_width // 2 - 150, screen_height // 2 - 100, 300, 50)
     input_box_name = pygame.Rect(screen_width // 2 - 150, screen_height // 2, 300, 50)
-    button_box = pygame.Rect(screen_width // 2 - 100, screen_height // 2 + 80, 200, 50)
+    button_box = pygame.Rect(screen_width // 2 - 100, screen_height // 2 + 120, 200, 50)
+    back_button_box = pygame.Rect(screen_width // 2 - 100, screen_height // 2 + 200, 200, 50)
 
     color_inactive = stt.BLUE
     color_active = stt.WHITE
@@ -214,23 +291,38 @@ def show_player_data_screen():
     active_name = False
     player_id = ""
     player_name = ""
+    error_message = ""
 
     while True:
         screen.fill(stt.BLACK)
+        
+        # Dibujar etiquetas
+        id_label = label_font.render("ID del jugador:", True, stt.WHITE)
+        name_label = label_font.render("Nombre del jugador:", True, stt.WHITE)
+        screen.blit(id_label, (input_box_id.x, input_box_id.y - 30))
+        screen.blit(name_label, (input_box_name.x, input_box_name.y - 30))
 
         # Dibujar los cuadros de texto y el botón
         pygame.draw.rect(screen, color_active if active_id else color_inactive, input_box_id, 2)
         pygame.draw.rect(screen, color_active if active_name else color_inactive, input_box_name, 2)
         pygame.draw.rect(screen, color_button, button_box)
+        pygame.draw.rect(screen, stt.RED, back_button_box)
 
         # Renderizar texto
         id_text = font.render(player_id, True, stt.WHITE)
         name_text = font.render(player_name, True, stt.WHITE)
-        button_text = font.render("Crear Partida", True, stt.WHITE)
+        button_text = font.render("Crear", True, stt.WHITE)
+        back_button_text = font.render("Regresar", True, stt.WHITE)
 
         screen.blit(id_text, (input_box_id.x + 10, input_box_id.y + 10))
         screen.blit(name_text, (input_box_name.x + 10, input_box_name.y + 10))
         screen.blit(button_text, (button_box.x + 50, button_box.y + 10))
+        screen.blit(back_button_text, (back_button_box.x + 50, back_button_box.y + 10))
+        
+        if error_message:
+            error_text = error_font.render(error_message, True, stt.RED)
+            screen.blit(error_text, (screen_width // 2 - error_text.get_width() // 2, screen_height // 2 + 70))
+
 
         pygame.display.flip()
 
@@ -250,7 +342,10 @@ def show_player_data_screen():
                     if player_id and player_name:
                         return player_id, player_name
                     else:
-                        print("¡El ID y el nombre son obligatorios!")
+                        error_message = "¡El ID y el nombre son obligatorios!"
+                elif back_button_box.collidepoint(event.pos):
+                    # Regresar al menú principal
+                    return None, None
                 else:
                     active_id = False
                     active_name = False
