@@ -23,6 +23,7 @@ def deencrypt_input(movement):
 
 def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_players=[]):
     ships = []
+    lock = threading.Lock()
 
     for player in online_players:
         print(f"Jugador: {player.username} - UUID: {player.player_uuid} - Color: {player.color}")
@@ -69,30 +70,44 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
     def local_player_input_iterator():
         while True:
-            # Aquí puedes implementar la lógica para obtener los inputs del jugador
-            # Por ahora, simplemente devolvemos un valor de ejemplo
-            yield {
-                "move": True,
-                "shoot": False,
-                "powerup": False
-            }
+            with lock:
+                nonlocal local_player_inputs
+                yield local_player_inputs
 
     local_player_input_thread = threading.Thread(target=local_player_input_iterator)
     local_player_input_thread.start()
 
-    local_player_inputs = [
-        {
+    local_player_inputs =         {
             "move": False,
             "stride_left": False,
             "stride_right": False,
             "stop": False,
             "is_shoot": False
         }
-    ]
+    
+
+    key_action_map = {
+        pygame.K_w: "move",
+        pygame.K_s: "stop",
+        pygame.K_a: "stride_left",
+        pygame.K_d: "stride_right",
+        pygame.K_SPACE: "is_shoot",
+    }
 
     def getInputs(deltaTime) -> None:
         keys = pygame.key.get_pressed()
-        actions = map()
+        actions = {}
+
+        for key, action in key_action_map.items():
+            actions[action] = keys[key]
+        
+        print(f"Acciones del jugador local: {actions}")
+        
+        # Actualizar la entrada del jugador local
+        nonlocal local_player_inputs
+        
+        with lock:
+            local_player_inputs = actions
 
 
     # def getInputs(deltaTime):
