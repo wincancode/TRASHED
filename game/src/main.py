@@ -29,10 +29,10 @@ game_code = ''
 def show_tutorial_screen(screen):
     # Tarjetas de powerups: icono y descripción
     powerups_info = [
-        {"icon": "game/assets/sprites/ShieldUpgrade.png", "name": "Escudo", "desc": "Te protege de un impacto."},
-        {"icon": "game/assets/sprites/DamageUp.png", "name": "Láser Mejorado", "desc": "Aumenta el daño de tu disparo."},
-        {"icon": "game/assets/sprites/Nuke.png", "name": "Nuke", "desc": "Destruye todos los asteroides en pantalla (solo una vez por partida)."},
-        {"icon": "game/assets/sprites/Turbinas.png", "name": "Turbina", "desc": "Aumenta la velocidad y giro de la nave."},
+        {"icon": stt.SHIELD_UPGRADE_ICON, "name": "Escudo", "desc": "Te protege de un impacto."},
+        {"icon": stt.DAMAGE_UP_ICON, "name": "Láser Mejorado", "desc": "Aumenta el daño de tu disparo."},
+        {"icon": stt.NUKE_ICON, "name": "Nuke", "desc": "Destruye todos los asteroides en pantalla (solo una vez por partida)."},
+        {"icon": stt.TURBINAS_ICON, "name": "Turbina", "desc": "Aumenta la velocidad y giro de la nave."},
     ]
     running = True
     while running:
@@ -84,22 +84,21 @@ def show_controls_tutorial_screen(screen):
                 running = False
                 break
 
-if Mostrar_inicio:
-    while True:
-        start_option = show_start_screen()
-        if start_option == "join":
-            result, user_uuid, game_code, online_players = show_join_game_screen()
-            if result == "back":
-                continue  # Volver al menú principal
-        elif start_option == "create":
-            result, user_uuid, game_code, online_players = show_create_game_screen()
-            if result == "back":
-                continue  # Volver al menú principal
-        elif start_option == "tutorial":
-            show_tutorial_screen(screen)
-            show_controls_tutorial_screen(screen)
-            continue
-        break
-
-start_game(screen, screen_width, screen_height, game_code, user_uuid, online_players)
-
+while True:
+    if Mostrar_inicio:
+        while True:
+            start_option = show_start_screen()
+            if start_option == "join":
+                result, user_uuid, game_code, online_players = show_join_game_screen()
+                if result == "back":
+                    continue  # Volver al menú principal
+            elif start_option == "create":
+                result, user_uuid, game_code, online_players = show_create_game_screen()
+                if result == "back":
+                    continue  # Volver al menú principal
+            elif start_option == "tutorial":
+                show_tutorial_screen(screen)
+                show_controls_tutorial_screen(screen)
+                continue
+            break
+    start_game(screen, screen_width, screen_height, game_code, user_uuid, online_players)

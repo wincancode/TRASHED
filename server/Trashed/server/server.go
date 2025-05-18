@@ -1,10 +1,12 @@
 package main
 
 import (
+	"Trashed/Trashed/gameLogic"
 	"Trashed/Trashed/proto"
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"net"
 	"sync"
@@ -23,13 +25,19 @@ type server struct {
 
 type game struct {
 	Data *proto.GameData
-	SubscribedInputStreams map[string]proto.GameService_JoinInputUpdatesServer 
+	SubscribedInputStreams map[string]proto.GameService_JoinInputUpdatesServer
+	Ships map[string]*gameLogic.ShipState // key: playerUuid
+	Asteroids map[int]*gameLogic.Asteroid // key: asteroidId
+	Bullets map[int]*gameLogic.Bullet // key: bulletId
+	PowerUps map[int]*gameLogic.PowerUp // key: powerUpId
+	LatestInputs map[string]*proto.Input // Store latest input per player
+	Level *gameLogic.Level // Game level state
+	NextBulletID int // Next bullet ID to be assigned
 }
 
 func NewServer() *server {
 	return &server{
 		games: make(map[string]game),
-		
 	}
 }
 
@@ -49,6 +57,10 @@ func generateGameCode() string {
 	for i := range code {
 		code[i] = charset[rand.Intn(len(charset))]
 	}
+
+
+	//!!!!!!!!!!!!!!!!!!!!
+	code = []byte("2")
 	return string(code)
 }
 
@@ -146,81 +158,388 @@ func (s *server) StartGame(ctx context.Context, in *proto.GameCode) (*proto.Bool
 		return &proto.BoolMessage{Value: false}, fmt.Errorf("partida no encontrada")
 	}
 
-	// Marcar la partida como iniciada
-	game.Data.Started = true
+	// Initialize ShipStates for each player
+	ships := make(map[string]*gameLogic.ShipState)
+	for _, player := range game.Data.Players {
+		ships[player.PlayerUuid] = &gameLogic.ShipState{
+			PlayerUuid: player.PlayerUuid,
+			PosX: 800/2,
+			PosY: 600/2,
+			Angle: 360,
+			Speed: 0,
+			LaserBoostLevel: 0,
+			ShieldActive: false,
+			ShieldCharges: 0,
+			Lives: 3,
+		}
+	}
+	game.Ships = ships
+	game.Asteroids = make(map[int]*gameLogic.Asteroid)
+	game.Bullets = make(map[int]*gameLogic.Bullet)
+	game.PowerUps = make(map[int]*gameLogic.PowerUp)
+	game.Level = &gameLogic.Level{
+		CurrentLevel:         1,
+		AsteroidsDestroyed:   0,
+		AsteroidsToNextLevel: 10,
+		LevelUpMessageTimer:  0,
+		MinAsteroids:         10,
+		DifficultyFactor:     1,
+		Score: 0,
+	}
 	
+	// Initialize LatestInputs map
+	game.LatestInputs = make(map[string]*proto.Input)
+	s.games[gameCode] = game
+
+	// Mark game as started
+	game.Data.Started = true
+
+	// Start the fixed-tick game loop
+	go s.runGameLoop(gameCode)
+
 	log.Printf("Partida iniciada: %s", gameCode)
 	return &proto.BoolMessage{Value: true}, nil;
 }
 
+// Fixed-tick game loop for each game
+func (s *server) runGameLoop(gameCode string) {
+	ticker := time.NewTicker(time.Second / 60) // 60 FPS
+	defer ticker.Stop()
+	var lastTick = time.Now()
+	for {
+		<-ticker.C
+		deltaTime := time.Since(lastTick).Seconds()
+		lastTick = time.Now()
+		s.mu.Lock()
+		game, exists := s.games[gameCode]
+		if !exists || !game.Data.Started {
+			s.mu.Unlock()
+			return
+		}
+
+		
+		
+		
+		
+		//*Game functionalities
+		
+		//instantiate bullets 
+		for playerID, ship := range game.Ships {
+			input := game.LatestInputs[playerID]
+
+
+			//ceck if the ship is alive, and ignore if not
+			if ship.Lives <= 0 {
+				continue
+			}
+
+			if input == nil {
+				input = &proto.Input{}
+			}
+			if input.IsShoot && ship.LastShotTime.Add(200*time.Millisecond).Before(time.Now()) {
+				bullet := gameLogic.InitializeBullet(ship.PosX, ship.PosY, ship.Angle,ship.LaserBoostLevel,playerID)
+				game.NextBulletID++
+				bulletID :=  game.NextBulletID
+				game.Bullets[bulletID] = &bullet
+				game.Ships[playerID].LastShotTime = time.Now()
+			}
+		}
+
+		//update bullet positions
+		for _, bullet := range game.Bullets {
+			if bullet != nil {
+					gameLogic.UpdateBulletPosition(bullet, deltaTime,1000,1000)
+			}
+		}
+
+		//instantiate asteroids if needed
+		if len(game.Asteroids) < game.Level.MinAsteroids {
+			asteroid := gameLogic.InitializeAsteroid(rand.Int(), game.Level.DifficultyFactor)
+			game.Asteroids[asteroid.ID] = &asteroid
+		}
+
+
+		//update asteroids
+		for _, asteroid := range game.Asteroids {
+			if asteroid != nil {				
+				gameLogic.UpdateAsteroidPosition(asteroid, deltaTime, 800, 600)
+			}
+		}
+
+		
+		//manage asteroid collisions with bullets, score and difficulty logic
+		points, destroyed_count := gameLogic.HandleBulletAsteroidCollisions(
+			game.Bullets,
+			game.Asteroids,
+			game.PowerUps,
+		)
+		game.Level.Score += points
+
+		
+		//*destroy deactivated objects
+
+		//destroy bullets
+		for id, bullet := range game.Bullets {
+			if bullet != nil && !bullet.Active {
+				delete(game.Bullets, id)
+			}
+		}
+
+		//destroy asteroids
+		for id, asteroid := range game.Asteroids {
+			if asteroid != nil && asteroid.Health <= 0 {
+				delete(game.Asteroids, id)
+			}
+		}
 
 
 
+		game.Level.AsteroidsDestroyed += destroyed_count
+		if game.Level.AsteroidsToNextLevel <= game.Level.AsteroidsDestroyed {
+			gameLogic.UpdateLevel(game.Level, destroyed_count, game.Asteroids)
+		}
 
+		game.Level.LevelUpMessageTimer -= deltaTime
+		if game.Level.LevelUpMessageTimer <= 0 {
+			game.Level.LevelUpMessageTimer = 0
+		}
+
+
+
+		
+		
+
+		//*PlayerUpdates
+
+		releasedAsteroids := make([]gameLogic.Asteroid, 0)
+
+		// Check for collisions between ships and asteroids
+		for _, ship := range game.Ships {
+			gameLogic.HandleShipAsteroidCollisions(
+				ship,
+				game.Asteroids,
+				&releasedAsteroids,
+			)
+		}
+
+		//add the released asteroids to the game
+		for _, releasedAsteroid := range releasedAsteroids {
+			game.Asteroids[releasedAsteroid.ID] = &releasedAsteroid
+		}
+
+		
+
+
+		// Update all ships
+		for playerID, ship := range game.Ships {
+			input := game.LatestInputs[playerID]
+
+			//ceck if the ship is alive, and ignore if not
+			if ship.Lives <= 0 {
+				continue
+			}
+
+			if input == nil {
+				input = &proto.Input{}
+			}
+			game.Ships[playerID] = gameLogic.UpdateShipPosition(ship, input, deltaTime)
+		}
+		
+
+
+		// Convert all ShipStates to proto.PlayerStates
+		playerStates := AllShipsToProtoStates(game.Ships, gameCode)
+		// Convert all AsteroidStates to proto.AsteroidStates
+		asteroidStates := AllAsteroidsToProtoStates(game.Asteroids)
+		// Convert all BulletStates to proto.BulletStates
+		bulletStates := AllBulletsToProtoStates(game.Bullets)
+		// Convert all PowerUpStates to proto.PowerUpStates
+		powerUpStates := AllPowerUpsToProtoStates(game.PowerUps)
+		// Convert Level to proto.Level
+		levelState := LevelToProto(game.Level)
+
+
+		// Compose GameState
+		gameState := &proto.GameState{
+			PlayerStates: playerStates,
+			Asteroids: asteroidStates,
+			Bullets: bulletStates,
+			Powerups: powerUpStates,
+			Level:  levelState,
+		}
+		// Broadcast updated state to all subscribed players
+		for _, subStream := range game.SubscribedInputStreams {
+			err := subStream.Send(gameState)
+			if err != nil {
+				log.Printf("Error sending state to player: %v", err)
+			}
+		}
+		s.games[gameCode] = game
+		s.mu.Unlock()
+	}
+}
+
+//Helper: convert Level to proto.Level
+func LevelToProto(level *gameLogic.Level) *proto.LevelState {
+	return &proto.LevelState{
+		CurrentLevel:         int32(level.CurrentLevel),
+		AsteroidsDestroyed:   int32(level.AsteroidsDestroyed),
+		AsteroidsToNextLevel: int32(level.AsteroidsToNextLevel),
+		LevelUpMessageTimer:  level.LevelUpMessageTimer,
+		MinAsteroids:         int32(level.MinAsteroids),
+		DifficultyFactor:     int32(level.DifficultyFactor),
+		Score:               int32(level.Score),
+	}
+}
+
+// Helper: Convert ShipState to proto.PlayerState
+func ShipStateToProto(playerUuid string, ship *gameLogic.ShipState, code string) *proto.PlayerState {
+	return &proto.PlayerState{
+		Code: code,
+		PlayerUuid: playerUuid,
+		Timestamp: time.Now().Unix(),
+		Position: &proto.Position{
+			X: ship.PosX,
+			Y: ship.PosY,
+			Angle: ship.Angle,
+			SpeedX: ship.Speed * math.Sin(degreesToRadians(ship.Angle)),
+			SpeedY: -ship.Speed * math.Cos(degreesToRadians(ship.Angle)),
+			AccelerationX: 0, // You can add this if you store it in ShipState
+			AccelerationY: 0,
+		},
+		Health: int32(ship.Lives),
+	}
+}
+
+func degreesToRadians(degrees float64) float64 {
+	return degrees * math.Pi / 180
+}
+
+// Helper: Convert all ShipStates to proto.PlayerStates map
+func AllShipsToProtoStates(ships map[string]*gameLogic.ShipState, code string) map[string]*proto.PlayerState {
+	states := make(map[string]*proto.PlayerState)
+	for uuid, ship := range ships {
+		states[uuid] = ShipStateToProto(uuid, ship, code)
+	}
+	return states
+}
+
+// Helper: Convert Asteroid to proto.AsteroidState
+func AsteroidStateToProto(id int, asteroid *gameLogic.Asteroid) *proto.AsteroidState {
+	return &proto.AsteroidState{
+		Id: int32(asteroid.ID),
+		X: asteroid.PosX,
+		Y: asteroid.PosY,
+		Width: int32(asteroid.Width),
+		Height: int32(asteroid.Height),
+		Speed: asteroid.Speed,
+		Angle: asteroid.Angle,
+		Health: int32(asteroid.Health),
+		MaxHealth: int32(asteroid.MaxHealth),
+	}
+}
+
+func AllAsteroidsToProtoStates(asteroids map[int]*gameLogic.Asteroid) []*proto.AsteroidState {
+	states := make([]*proto.AsteroidState, 0, len(asteroids))
+	for id, asteroid := range asteroids {
+		states = append(states, AsteroidStateToProto(id, asteroid))
+	}
+	return states
+}
+
+// Helper: Convert Bullet to proto.BulletState
+func BulletStateToProto(id int, bullet *gameLogic.Bullet) *proto.BulletState {
+	return &proto.BulletState{
+		Id: int32(id),
+		X: bullet.PosX,
+		Y: bullet.PosY,
+		Angle: bullet.Angle,
+		Speed: bullet.Speed,
+		Active: bullet.Active,
+		Damage: int32(bullet.Damage),
+		Width: int32(bullet.Width),
+		Height: int32(bullet.Height),
+		Owneruuid: bullet.Owneruuid,
+	}
+}
+
+func AllBulletsToProtoStates(bullets map[int]*gameLogic.Bullet) []*proto.BulletState {
+	states := make([]*proto.BulletState, 0, len(bullets))
+	for id, bullet := range bullets {
+		states = append(states, BulletStateToProto(id, bullet))
+	}
+	return states
+}
+
+// Helper: Convert PowerUp to proto.PowerUpState
+func PowerUpStateToProto(id int, powerup *gameLogic.PowerUp) *proto.PowerUpState {
+	return &proto.PowerUpState{
+		Id: int32(id),
+		X: powerup.PosX,
+		Y: powerup.PosY,
+		Type: powerup.Type,
+		Width: int32(powerup.Width),
+		Height: int32(powerup.Height),
+		Active: powerup.Active,
+	}
+}
+
+func AllPowerUpsToProtoStates(powerups map[int]*gameLogic.PowerUp) []*proto.PowerUpState {
+	states := make([]*proto.PowerUpState, 0, len(powerups))
+	for id, powerup := range powerups {
+		states = append(states, PowerUpStateToProto(id, powerup))
+	}
+	return states
+}
 
 func (s *server) JoinInputUpdates(stream proto.GameService_JoinInputUpdatesServer) error {
-	
 	md,ok := metadata.FromIncomingContext(stream.Context())
 	if !ok {
 		return fmt.Errorf("metadata not found")
 	}
-	
 	gameCode := md.Get("game_code")
 	playerUuid := md.Get("player_uuid")
-	
 	if len(playerUuid) == 0 {
 		return fmt.Errorf("player uuid not found")
 	}
-
 	if len(gameCode) == 0 {
 		return fmt.Errorf("game code not found")
 	}
-
-
 	gameCodeStr := gameCode[0]
 	playerUuidStr := playerUuid[0]
-
 	log.Printf("Player UUID: %s, Game Code: %s", playerUuidStr, gameCodeStr)
-
-
+	// Subscribe the player to input updates
 	s.mu.Lock()
 	game, exists := s.games[gameCodeStr]
-
 	if !exists {
 		s.mu.Unlock()
 		log.Printf("Partida no encontrada: %s", gameCodeStr)
 		return fmt.Errorf("partida no encontrada")
 	}
-
-	// Check if the player is already subscribed
 	if _, exists := game.SubscribedInputStreams[playerUuidStr]; exists {
 		s.mu.Unlock()
 		log.Printf("Player already subscribed: %s", playerUuidStr)
 		return fmt.Errorf("player already subscribed")
 	}
-
-	// Subscribe the player to input updates
 	game.SubscribedInputStreams[playerUuidStr] = stream
+	s.games[gameCodeStr] = game
 	s.mu.Unlock()
 	log.Printf("Player subscribed to input updates: %s", playerUuidStr)
-
+	// Only store latest input per player
 	for {
-        in, err := stream.Recv()
-        if err != nil {
-            return err
-        }
-        log.Printf("Received: %v", in)
-        // Echo back the input to all subscribed players
-        for _, subStream := range game.SubscribedInputStreams {
-			err := subStream.Send(in)
-			if err != nil {
-				log.Printf("Error sending input to player: %v", err)
-			}
+		in, err := stream.Recv()
+		if err != nil {
+			return err
 		}
-    }
+		s.mu.Lock()
+		game, exists := s.games[gameCodeStr]
+		if exists {
+			game.LatestInputs[in.PlayerUuid] = in.Input
+			s.games[gameCodeStr] = game
+		}
+		s.mu.Unlock()
+	}
 }
-
-
 
 
 func main() {

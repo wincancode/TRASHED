@@ -1,3 +1,4 @@
+import math
 import threading
 import time
 import pygame
@@ -5,7 +6,7 @@ from entities.ship import Ship
 from entities.asteroid import Asteroid
 from entities.powerup import apply_powerup_effect
 from collision import check_collisions, handle_bullet_asteroid_collisions, check_powerup_collisions
-from connectivity import join_input_updates
+from connectivity import join_game_state_updates
 import server.service_pb2 as service_pb2
 from menu import show_game_over_screen
 import settings as stt
@@ -35,43 +36,135 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
     clock = pygame.time.Clock()
 
     asteroids = []
+    asteroid_map = {}  # id -> asteroid for interpolation
     messages = []
     powerups = []
     released_asteroids = []
-    nuke_spawned = False
+    last_server_update = time.time()
+    local_player_inputs = {
+        "move": False,
+        "stride_left": False,
+        "stride_right": False,
+        "stop": False,
+        "is_shoot": False
+    }
 
-    #!!!!!!!!!!
-    MIN_ASTEROIDS = 10
+    INTERPOLATION_DELAY = 1.0 / 60  # Adjust to your server tick rate
 
-
-    for i in range(10):
-        asteroids.append(Asteroid(i))
-
-
-    local_player_inputs =    {
-            "move": False,
-            "stride_left": False,
-            "stride_right": False,
-            "stop": False,
-            "is_shoot": False
-        }
-
-        
-    def obtain_inputs_callback(inputs):
-        
-        keys = {}
-
-        keys["move"] = inputs.input.move
-        keys["stride_left"] = inputs.input.stride_left
-        keys["stride_right"] = inputs.input.stride_right
-        keys["stop"] = inputs.input.stop
-        keys["is_shoot"] = inputs.input.is_shoot
-
+    def obtain_game_state_callback(state):
+        nonlocal last_server_update
         with lock:
-            nonlocal ships
-            for ship in ships:   
-                if ship.id == inputs.player.player_uuid:
-                    ship.control(keys)
+            # Update ships
+            for ship in ships:
+                ship_state = state.playerStates[ship.id]
+                ship.setState(ship_state)
+                if ship.id == user_uuid:
+                    ship1.set_health(ship_state.health)
+
+            # Update asteroids from server state (with interpolation)
+            asteroid_ids = set()
+            if hasattr(state, 'asteroids'):
+                for asteroid_state in state.asteroids:
+                    asteroid_ids.add(asteroid_state.id)
+                    if asteroid_state.id in asteroid_map:
+                        asteroid = asteroid_map[asteroid_state.id]
+                        asteroid.prev_posX = getattr(asteroid, 'next_posX', asteroid.posX)
+                        asteroid.prev_posY = getattr(asteroid, 'next_posY', asteroid.posY)
+                        asteroid.next_posX = asteroid_state.x
+                        asteroid.next_posY = asteroid_state.y
+                        asteroid.last_update_time = time.time()
+                        asteroid.set_dimensions(asteroid_state.width, asteroid_state.height)
+                        asteroid.set_speed(asteroid_state.speed)
+                        asteroid.set_angle(asteroid_state.angle)
+                        asteroid.health = asteroid_state.health
+                        asteroid.max_health = asteroid_state.max_health
+                        asteroid.set_active(True)
+                    else:
+                        asteroid = Asteroid(asteroid_state.id)
+                        asteroid.prev_posX = asteroid_state.x
+                        asteroid.prev_posY = asteroid_state.y
+                        asteroid.next_posX = asteroid_state.x
+                        asteroid.next_posY = asteroid_state.y
+                        asteroid.last_update_time = time.time()
+                        asteroid.set_pos(asteroid_state.x, asteroid_state.y)
+                        asteroid.set_dimensions(asteroid_state.width, asteroid_state.height)
+                        asteroid.set_speed(asteroid_state.speed)
+                        asteroid.set_angle(asteroid_state.angle)
+                        asteroid.health = asteroid_state.health
+                        asteroid.max_health = asteroid_state.max_health
+                        asteroid.set_active(True)
+                        asteroid_map[asteroid_state.id] = asteroid
+                # Remove asteroids not present in the server state
+                for aid in list(asteroid_map.keys()):
+                    if aid not in asteroid_ids:
+                        del asteroid_map[aid]
+            # Update asteroids list for rendering
+            asteroids.clear()
+            asteroids.extend(asteroid_map.values())
+
+            # Update bullets for each ship (shared pool, assign to all ships for now)
+            for ship in ships:
+                ship.bullets.clear()
+            if hasattr(state, 'bullets'):
+                from entities.bullet import Bullet
+                for bullet_state in state.bullets:
+
+
+                    bullet = Bullet(
+                        bullet_state.id,
+                        bullet_state.x,
+                        bullet_state.y,
+                        bullet_state.angle
+                    )
+                    bullet.speed = bullet_state.speed
+                    bullet.active = bullet_state.active
+                    bullet.damage = bullet_state.damage
+                    bullet.width = bullet_state.width
+                    bullet.height = bullet_state.height
+
+                    #find the existing bullets 
+                    found = False
+                    for ship in ships:
+                        for existing_bullet in ship.bullets:
+                            if existing_bullet.id == bullet_state.id:
+                                existing_bullet.set_pos(bullet_state.x, bullet_state.y)
+                                existing_bullet.set_speed(bullet_state.speed)
+                                existing_bullet.set_angle(bullet_state.angle)
+                                existing_bullet.active = bullet_state.active
+                                found = True
+                                break
+                        if found:
+                            break
+                    if not found:
+                        # Add the bullet to the first ship's bullets list
+                        if ships:
+                            ships[0].bullets.append(bullet)
+            
+            #Update level state 
+            if hasattr(state, 'level'):
+                level.current_level = state.level.current_level
+                level.score = state.level.score
+                level.asteroids_destroyed = state.level.asteroids_destroyed
+                level.asteroids_to_next_level = state.level.asteroids_to_next_level
+                level.difficulty_factor = state.level.difficulty_factor
+                level.level_up_message_timer = state.level.level_up_message_timer                
+
+
+
+
+        # keys = {}
+
+        # keys["move"] = inputs.input.move
+        # keys["stride_left"] = inputs.input.stride_left
+        # keys["stride_right"] = inputs.input.stride_right
+        # keys["stop"] = inputs.input.stop
+        # keys["is_shoot"] = inputs.input.is_shoot
+
+        # with lock:
+        #     nonlocal ships
+        #     for ship in ships:   
+        #         if ship.id == inputs.player.player_uuid:
+        #             ship.control(keys)
                 
 
     def local_player_input_iterator():
@@ -80,7 +173,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                 nonlocal local_player_inputs                
                 yield service_pb2.PlayerState(
                 code=game_code,
-                player=service_pb2.PlayerData(player_uuid=user_uuid), 
+                player_uuid= user_uuid,
                 timestamp=int(pygame.time.get_ticks()),
                 input=service_pb2.Input(
                     move=local_player_inputs["move"],
@@ -93,8 +186,8 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             time.sleep(0.01)  # Delay to control the rate of sending inputs
 
     Input_updates_thread = threading.Thread(
-        target=join_input_updates,
-        args=(game_code,user_uuid,obtain_inputs_callback,local_player_input_iterator)
+        target=join_game_state_updates,
+        args=(game_code,user_uuid,obtain_game_state_callback,local_player_input_iterator)
     )
     Input_updates_thread.start()
 
@@ -127,7 +220,6 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
          ship1.control(keys)
          ship1.updatePosition(deltaTime)
 
-    score = 0
 
     # Inicializar el sistema de niveles
     level = Level()
@@ -143,37 +235,33 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
         delta_time = clock.tick(stt.GAME_FPS) / 1000.0  # Convert milliseconds to seconds
 
-        # Actualizar cooldown de la nuke
-        if nuke_cooldown > 0:
-            nuke_cooldown -= delta_time
-            if nuke_cooldown < 0:
-                nuke_cooldown = 0
-
-        if check_collisions(ship1, asteroids, released_asteroids):
-            if ship1.lives <= 0:
-                show_game_over_screen(screen, screen_width, screen_height)
-                running = False
-                break
+        # if check_collisions(ship1, asteroids, released_asteroids):
+        #     if ship1.lives <= 0:
+        #         show_game_over_screen(screen, screen_width, screen_height)
+        #         running = False
+        #         break
 
         # Manejar colisiones entre balas y asteroides
-        for ship in ships:
-            points, destroyed_count = handle_bullet_asteroid_collisions(ship.bullets, asteroids, messages, powerups, released_asteroids,nuke_spawned)
-            score += points  # Sumar los puntos obtenidos al puntaje total
-            level.update(destroyed_count, asteroids)  # Actualizar el progreso del nivel
+        # for ship in ships:
+        #     points, destroyed_count = handle_bullet_asteroid_collisions(ship.bullets, asteroids, messages, powerups, released_asteroids)
+        #     score += points  # Sumar los puntos obtenidos al puntaje total
+        #     level.update(destroyed_count, asteroids)  # Actualizar el progreso del nivel
 
-        # Generar nuevos asteroides si el número es menor al mínimo y no está en cooldown de nuke
-        if nuke_cooldown == 0:
-            while len(asteroids) < level.min_asteroids:
-                asteroids.append(Asteroid(len(asteroids), difficulty_factor=level.difficulty_factor))
+        # Generar nuevos asteroides si el número es menor al mínimo
+        # while len(asteroids) < level.min_asteroids:
+        #      asteroids.append(Asteroid(len(asteroids), difficulty_factor=level.difficulty_factor))
 
 
         # Limpiar la pantalla
         screen.fill(stt.BLACK)
 
-        #!!!!!!!!!!!!!!! Dibujar asteroides
         for asteroid in asteroids:
-            asteroid.Update(delta_time, screen)
-            asteroid.draw_health(screen)
+            now = time.time()
+            t = min((now - getattr(asteroid, 'last_update_time', now)) / INTERPOLATION_DELAY, 1.0)
+            interp_x = getattr(asteroid, 'prev_posX', asteroid.posX) * (1 - t) + getattr(asteroid, 'next_posX', asteroid.posX) * t
+            interp_y = getattr(asteroid, 'prev_posY', asteroid.posY) * (1 - t) + getattr(asteroid, 'next_posY', asteroid.posY) * t
+            asteroid.draw_at(screen, interp_x, interp_y)
+            asteroid.draw_health(screen,interp_x,interp_y)
 
         # Dibujar mensajes temporales
         for message in messages[:]:
@@ -207,9 +295,9 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
         for asteroid in released_asteroids[:]:
             asteroid.Update(delta_time, screen)
-            asteroid.draw_health(screen)
-            if asteroid.health <= 0:
-                released_asteroids.remove(asteroid)
+            asteroid.draw_health(screen,asteroid.posX,asteroid.posY)
+            # if asteroid.health <= 0:
+            #     released_asteroids.remove(asteroid)
 
         # Mostrar el mensaje de "Subiste de Nivel"
         if level.level_up_message_timer > 0:
@@ -221,12 +309,23 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             getInputs(delta_time)
 
         for ship in ships:
+            #not render dead ships
+            if ship.lives <= 0:
+                continue
+
             ship.draw(screen,delta_time)
             ship.updatePosition(delta_time)  # Update the ship's position with a small delta time
 
+        #check if game ended 
+        if all(ship.lives <= 0 for ship in ships):
+            show_game_over_screen(screen, screen_width, screen_height)
+            running = False
+            break
+        
+            
 
         # Mostrar la puntuación acumulada
-        draw_text(screen, f"Puntos: {score}", (10, 10), (255, 255, 255))
+        draw_text(screen, f"Puntos: {level.score}", (10, 10), (255, 255, 255))
 
         # Mostrar las vidas
         draw_text(screen, f"Vidas: {ship1.lives}", (screen_width - 120, 10), (255, 255, 255))
@@ -245,6 +344,10 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             bg_color=(50, 50, 50)  # Color de fondo (gris oscuro)
         )
 
+
+        
+
         # Actualizar la pantalla
         pygame.display.flip()
-
+    
+    return "back"

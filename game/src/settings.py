@@ -1,4 +1,3 @@
-
 import os
 
 #needed constants
@@ -59,7 +58,11 @@ ASTEROID_BASE_ACCELERATION = 0.5  # Base acceleration of the asteroid in units p
 ASTEROID_VARIANCE = 0.5  # Variance in speed for asteroids
 ASTEROID_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "asteroid.png")  # Default sprite for the asteroid
 
-
+# Powerup asset image paths
+SHIELD_UPGRADE_ICON = os.path.join(BASE_DIR, "..", "assets", "sprites", "ShieldUpgrade.png")
+DAMAGE_UP_ICON = os.path.join(BASE_DIR, "..", "assets", "sprites", "DamageUp.png")
+NUKE_ICON = os.path.join(BASE_DIR, "..", "assets", "sprites", "Nuke.png")
+TURBINAS_ICON = os.path.join(BASE_DIR, "..", "assets", "sprites", "Turbinas.png")
 
 
 

@@ -1,3 +1,4 @@
+import time
 import pygame
 import settings as stt
 from utils import clamp_abs
@@ -32,6 +33,14 @@ class Entity:
 
         # Set color
         self.color = color
+
+        
+        # For interpolation
+        self.prev_posX = self.posX
+        self.prev_posY = self.posY
+        self.next_posX = self.posX
+        self.next_posY = self.posY
+        self.last_update_time = time.time()
         
     def updatePosition(self, delta_time) -> None:
         self.posX += self.speedX * delta_time
@@ -108,7 +117,25 @@ class Entity:
     def Update(self, delta_time, screen):
         self.updatePosition(delta_time)
         self.draw(screen)
+    
+    
+    def draw_at(self, screen, x, y):
+          if self.sprite:
+            # Sc    Zale the original sprite to the desired dimensions
+            scaled_sprite = pygame.transform.scale(self.sprite, (self.width, self.height))
+            # tint the sprite with the desired color
+            if self.color != stt.WHITE:
+                scaled_sprite = self.tint_surface(scaled_sprite, self.color)
+            # Rotate the scaled sprite
+            rotated_sprite = pygame.transform.rotate(scaled_sprite, -self.angle)
+            # Get the rectangle for positioning
+            rect = rotated_sprite.get_rect(center=(x, y))
 
+            if(stt.GLOW):
+                self.glow(screen)
+
+            # Draw the rotated sprite on the screen
+            screen.blit(rotated_sprite, rect.topleft)
     
     
     # Getters

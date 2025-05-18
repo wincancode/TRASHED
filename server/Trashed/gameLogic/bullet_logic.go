@@ -1,4 +1,4 @@
-package main
+package gameLogic
 
 import (
 	"math"
@@ -14,10 +14,11 @@ type Bullet struct {
 	Damage int
 	Width  int
 	Height int
+	Owneruuid string
 }
 
 // InitializeBullet crea una nueva bala
-func InitializeBullet(x, y, angle float64, laserBoostLevel int) Bullet {
+func InitializeBullet(x, y, angle float64, laserBoostLevel int, owneruuid string) Bullet {
 	const baseSpeed = 300.0 // Velocidad base de la bala
 	const baseDamage = 1    // Daño base de la bala
 
@@ -30,6 +31,7 @@ func InitializeBullet(x, y, angle float64, laserBoostLevel int) Bullet {
 		Damage: baseDamage + laserBoostLevel,
 		Width:  5,  // Ancho de la bala
 		Height: 10, // Alto de la bala
+		Owneruuid: owneruuid,
 	}
 }
 

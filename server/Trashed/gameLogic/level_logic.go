@@ -1,4 +1,4 @@
-package main
+package gameLogic
 
 // Level representa el estado de un nivel en el juego
 type Level struct {
@@ -8,6 +8,7 @@ type Level struct {
 	LevelUpMessageTimer  float64
 	MinAsteroids         int
 	DifficultyFactor     int
+	Score			   int
 }
 
 // InitializeLevel inicializa un nuevo nivel
@@ -23,7 +24,7 @@ func InitializeLevel() Level {
 }
 
 // UpdateLevel actualiza el progreso del nivel
-func UpdateLevel(level *Level, destroyedCount int, asteroids *[]Asteroid) {
+func UpdateLevel(level *Level, destroyedCount int, asteroids map[int]*Asteroid) {
 	level.AsteroidsDestroyed += destroyedCount
 	if level.AsteroidsDestroyed >= level.AsteroidsToNextLevel {
 		level.CurrentLevel++
@@ -35,12 +36,11 @@ func UpdateLevel(level *Level, destroyedCount int, asteroids *[]Asteroid) {
 }
 
 // IncreaseDifficulty incrementa la dificultad del juego
-func IncreaseDifficulty(level *Level, asteroids *[]Asteroid) {
+func IncreaseDifficulty(level *Level, asteroids map[int]*Asteroid) {
 	level.DifficultyFactor++
 
 	// Incrementar la dificultad de los asteroides existentes
-	for i := 0; i < len(*asteroids); i++ {
-		asteroid := &(*asteroids)[i]
+	for _, asteroid := range asteroids {
 		asteroid.MaxHealth++
 		asteroid.Health = asteroid.MaxHealth
 		asteroid.Width += 5

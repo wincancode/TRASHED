@@ -29,6 +29,11 @@ class Ship(Entity):
         self.shield_active = False  # Indica si el escudo está activo
         self.bullets = []
 
+
+    def set_health(self, lives):
+        """Establece la vida de la nave."""
+        self.lives = lives
+
     
     def lose_life(self):
         """Reduce la vida de la nave en 1."""
@@ -87,8 +92,8 @@ class Ship(Entity):
         # Dibujar las balas
         for bullet in self.bullets[:]:
             bullet.Update(delta_time, screen)
-            if not bullet.active:
-                self.bullets.remove(bullet)
+            # if not bullet.active:
+            #     self.bullets.remove(bullet)
 
         # Dibujar el escudo si está activo
         if self.shield_active:
@@ -99,3 +104,28 @@ class Ship(Entity):
                 self.width,  # Radio del círculo (igual al ancho de la nave)
                 3  # Grosor del borde del círculo
             )
+
+    def setState(self, state):
+        """Establece el estado de la nave."""
+        if state is None or not hasattr(state, "position") or state.position is None:
+            return
+
+        if hasattr(state,"health") and state.health is not None:
+            self.set_health(state.health)
+
+        pos = state.position
+        if getattr(pos, "x", None) is not None and getattr(pos, "y", None) is not None:
+            self.set_pos(pos.x, pos.y)
+        if hasattr(pos, "angle") and pos.angle is not None:
+            self.set_angle(pos.angle)
+        if hasattr(pos, "speedX") and pos.speedX is not None:
+            self.speedX = pos.speedX
+        if hasattr(pos, "speedY") and pos.speedY is not None:
+            self.speedY = pos.speedY
+        if hasattr(pos, "accelerationX") and pos.accelerationX is not None:
+            self.accelerationX = pos.accelerationX
+        if hasattr(pos, "accelerationY") and pos.accelerationY is not None:
+            self.accelerationY = pos.accelerationY
+        if hasattr(pos, "speed",) and pos.speed is not None:
+            self.set_speed(pos.speed)
+        

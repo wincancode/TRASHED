@@ -1,4 +1,4 @@
-package main
+package gameLogic
 
 // PlayerScore representa la puntuación de un jugador
 type PlayerScore struct {

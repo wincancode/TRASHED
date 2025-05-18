@@ -1,4 +1,4 @@
-package main
+package gameLogic
 
 import (
 	"math"
@@ -12,9 +12,11 @@ func CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2 float64) bool {
 }
 
 // HandleShipAsteroidCollisions maneja las colisiones entre una nave y asteroides
-func HandleShipAsteroidCollisions(ship *ShipState, asteroids *[]Asteroid, releasedAsteroids *[]Asteroid) bool {
-	for i := 0; i < len(*asteroids); i++ {
-		asteroid := &(*asteroids)[i]
+func HandleShipAsteroidCollisions(ship *ShipState, asteroids map[int]*Asteroid, releasedAsteroids *[]Asteroid) bool {
+	for id, asteroid := range asteroids {
+		if asteroid == nil {
+			continue
+		}
 		if CheckCollision(ship.PosX, ship.PosY, 50, 50, asteroid.PosX, asteroid.PosY, float64(asteroid.Width), float64(asteroid.Height)) {
 			if ship.ShieldActive {
 				ship.ShieldCharges--
@@ -22,12 +24,15 @@ func HandleShipAsteroidCollisions(ship *ShipState, asteroids *[]Asteroid, releas
 					ship.ShieldActive = false
 				}
 				*releasedAsteroids = append(*releasedAsteroids, ReleaseAsteroids(ship, 8)...) // Liberar asteroides
-				*asteroids = append((*asteroids)[:i], (*asteroids)[i+1:]...)                  // Eliminar asteroide
-				return false                                                                  // No perder vida
+				delete(asteroids, id) // Eliminar asteroide
+				return false // No perder vida
 			} else {
 				ship.Lives--
-				*asteroids = append((*asteroids)[:i], (*asteroids)[i+1:]...) // Eliminar asteroide
-				return true                                                  // Perder vida
+				if ship.Lives <= 0 {
+					ship.Lives = 0
+				}
+				delete(asteroids, id) // Eliminar asteroide
+				return true // Perder vida
 			}
 		}
 	}
@@ -35,43 +40,45 @@ func HandleShipAsteroidCollisions(ship *ShipState, asteroids *[]Asteroid, releas
 }
 
 // HandleBulletAsteroidCollisions maneja las colisiones entre balas y asteroides
-func HandleBulletAsteroidCollisions(bullets *[]Bullet, asteroids *[]Asteroid, messages *[]string, powerups *[]PowerUp, releasedAsteroids *[]Asteroid) (int, int) {
+func HandleBulletAsteroidCollisions(bullets map[int]*Bullet, asteroids map[int]*Asteroid, powerups map[int]*PowerUp) (int, int) {
 	totalPoints := 0
 	destroyedCount := 0
 
-	for i := 0; i < len(*bullets); i++ {
-		bullet := &(*bullets)[i]
-		if !bullet.Active {
+	for _, bullet := range bullets {
+		if bullet == nil || !bullet.Active {
 			continue
 		}
-
-		for j := 0; j < len(*asteroids); j++ {
-			asteroid := &(*asteroids)[j]
+		for _, asteroid := range asteroids {
+			if asteroid == nil || asteroid.Health <= 0 {
+				continue
+			}
 			if CheckCollision(bullet.PosX, bullet.PosY, float64(bullet.Width), float64(bullet.Height), asteroid.PosX, asteroid.PosY, float64(asteroid.Width), float64(asteroid.Height)) {
 				bullet.Active = false
 				asteroid.Health -= bullet.Damage
 
 				if asteroid.Health <= 0 {
-					*asteroids = append((*asteroids)[:j], (*asteroids)[j+1:]...)
 					destroyedCount++
-
+					asteroid.Health = 0
 					// Calcular puntos según el tamaño del asteroide
-					points := asteroid.Width
+					points := rand.Intn(asteroid.MaxHealth) + 1
 					totalPoints += points
-
-					// Agregar un mensaje temporal
-					*messages = append(*messages, formatMessage("+"+string(points)+" puntos", 0))
-
 					// Generar un power-up con probabilidad del 50%
 					if rand.Float64() < 0.5 {
-						*powerups = append(*powerups, GenerateRandomPowerUp(asteroid.PosX, asteroid.PosY))
+						newPowerUp := GenerateRandomPowerUp(asteroid.PosX, asteroid.PosY)
+						// Find next available powerup ID
+						maxID := 0
+						for id := range powerups {
+							if id > maxID {
+								maxID = id
+							}
+						}
+						powerups[maxID+1] = &newPowerUp
 					}
 				}
-				break
+				break // Only one asteroid per bullet
 			}
 		}
 	}
-
 	return totalPoints, destroyedCount
 }
 
