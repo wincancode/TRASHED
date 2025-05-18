@@ -1,3 +1,4 @@
+import math
 import threading
 import time
 import pygame
@@ -78,8 +79,12 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                         asteroid.set_active(True)
                     else:
                         asteroid = Asteroid(asteroid_state.id)
-                        asteroid.prev_posX = asteroid_state.x
-                        asteroid.prev_posY = asteroid_state.y
+                        # Predict previous position for smooth interpolation
+                        dt = INTERPOLATION_DELAY
+                        dx = asteroid_state.speed * math.cos(math.radians(asteroid_state.angle)) * dt
+                        dy = asteroid_state.speed * math.sin(math.radians(asteroid_state.angle)) * dt
+                        asteroid.prev_posX = asteroid_state.x - dx
+                        asteroid.prev_posY = asteroid_state.y - dy
                         asteroid.next_posX = asteroid_state.x
                         asteroid.next_posY = asteroid_state.y
                         asteroid.last_update_time = time.time()
