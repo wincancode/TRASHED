@@ -7,11 +7,14 @@ import (
 
 // ShipState represents the state of a ship in the game world.
 type ShipState struct {
-	PlayerUuid string
-	PosX      float64
-	PosY      float64
-	Angle     float64
-	Speed     float64
+	PlayerUuid      string
+	PosX            float64
+	PosY            float64
+	Angle           float64
+	Speed           float64
+	LaserBoostLevel int
+	ShieldActive    bool
+	ShieldCharges   int
 }
 
 // MovementInput represents the input for a ship's movement.
@@ -26,8 +29,8 @@ type MovementInput struct {
 // UpdateShipPosition updates the ship's position based on the input and current state.
 func UpdateShipPosition(ship *ShipState, input *proto.Input, deltaTime float64) {
 	const (
-		moveSpeed   = 80.0 // units per second
-		turnSpeed   = 1.2 // degrees per second
+		moveSpeed = 80.0 // units per second
+		turnSpeed = 1.2  // degrees per second
 	)
 
 	if input.Move {
@@ -45,5 +48,3 @@ func UpdateShipPosition(ship *ShipState, input *proto.Input, deltaTime float64) 
 	}
 	// Shooting logic can be handled elsewhere
 }
-
-
