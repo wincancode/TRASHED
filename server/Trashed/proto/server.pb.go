@@ -114,7 +114,8 @@ type PlayerState struct {
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
 	Player        *PlayerData            `protobuf:"bytes,2,opt,name=player,proto3" json:"player,omitempty"`
 	Timestamp     int64                  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"` //For sync
-	Input         *Input                 `protobuf:"bytes,4,opt,name=input,proto3" json:"input,omitempty"`
+	Position      *Position              `protobuf:"bytes,4,opt,name=position,proto3" json:"position,omitempty"`
+	Input         *Input                 `protobuf:"bytes,5,opt,name=input,proto3" json:"input,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -170,11 +171,70 @@ func (x *PlayerState) GetTimestamp() int64 {
 	return 0
 }
 
+func (x *PlayerState) GetPosition() *Position {
+	if x != nil {
+		return x.Position
+	}
+	return nil
+}
+
 func (x *PlayerState) GetInput() *Input {
 	if x != nil {
 		return x.Input
 	}
 	return nil
+}
+
+type Position struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             float32                `protobuf:"fixed32,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             float32                `protobuf:"fixed32,2,opt,name=y,proto3" json:"y,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Position) Reset() {
+	*x = Position{}
+	mi := &file_server_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Position) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Position) ProtoMessage() {}
+
+func (x *Position) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Position.ProtoReflect.Descriptor instead.
+func (*Position) Descriptor() ([]byte, []int) {
+	return file_server_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Position) GetX() float32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *Position) GetY() float32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
 }
 
 type Input struct {
@@ -190,7 +250,7 @@ type Input struct {
 
 func (x *Input) Reset() {
 	*x = Input{}
-	mi := &file_server_proto_msgTypes[3]
+	mi := &file_server_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -202,7 +262,7 @@ func (x *Input) String() string {
 func (*Input) ProtoMessage() {}
 
 func (x *Input) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_msgTypes[3]
+	mi := &file_server_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -215,7 +275,7 @@ func (x *Input) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Input.ProtoReflect.Descriptor instead.
 func (*Input) Descriptor() ([]byte, []int) {
-	return file_server_proto_rawDescGZIP(), []int{3}
+	return file_server_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Input) GetMove() bool {
@@ -268,7 +328,7 @@ type PlayerData struct {
 
 func (x *PlayerData) Reset() {
 	*x = PlayerData{}
-	mi := &file_server_proto_msgTypes[4]
+	mi := &file_server_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -280,7 +340,7 @@ func (x *PlayerData) String() string {
 func (*PlayerData) ProtoMessage() {}
 
 func (x *PlayerData) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_msgTypes[4]
+	mi := &file_server_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -293,7 +353,7 @@ func (x *PlayerData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlayerData.ProtoReflect.Descriptor instead.
 func (*PlayerData) Descriptor() ([]byte, []int) {
-	return file_server_proto_rawDescGZIP(), []int{4}
+	return file_server_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *PlayerData) GetPlayerUuid() string {
@@ -356,7 +416,7 @@ type GameData struct {
 
 func (x *GameData) Reset() {
 	*x = GameData{}
-	mi := &file_server_proto_msgTypes[5]
+	mi := &file_server_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -368,7 +428,7 @@ func (x *GameData) String() string {
 func (*GameData) ProtoMessage() {}
 
 func (x *GameData) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_msgTypes[5]
+	mi := &file_server_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -381,7 +441,7 @@ func (x *GameData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameData.ProtoReflect.Descriptor instead.
 func (*GameData) Descriptor() ([]byte, []int) {
-	return file_server_proto_rawDescGZIP(), []int{5}
+	return file_server_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GameData) GetCode() string {
@@ -413,7 +473,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_server_proto_msgTypes[6]
+	mi := &file_server_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -425,7 +485,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_msgTypes[6]
+	mi := &file_server_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -438,7 +498,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_server_proto_rawDescGZIP(), []int{6}
+	return file_server_proto_rawDescGZIP(), []int{7}
 }
 
 var File_server_proto protoreflect.FileDescriptor
@@ -449,12 +509,16 @@ const file_server_proto_rawDesc = "" +
 	"\vBoolMessage\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\bR\x05value\"\x1e\n" +
 	"\bGameCode\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"\x90\x01\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\"\xbe\x01\n" +
 	"\vPlayerState\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12*\n" +
 	"\x06player\x18\x02 \x01(\v2\x12.server.PlayerDataR\x06player\x12\x1c\n" +
-	"\ttimestamp\x18\x03 \x01(\x03R\ttimestamp\x12#\n" +
-	"\x05input\x18\x04 \x01(\v2\r.server.InputR\x05input\"\x8e\x01\n" +
+	"\ttimestamp\x18\x03 \x01(\x03R\ttimestamp\x12,\n" +
+	"\bposition\x18\x04 \x01(\v2\x10.server.PositionR\bposition\x12#\n" +
+	"\x05input\x18\x05 \x01(\v2\r.server.InputR\x05input\"&\n" +
+	"\bPosition\x12\f\n" +
+	"\x01x\x18\x01 \x01(\x02R\x01x\x12\f\n" +
+	"\x01y\x18\x02 \x01(\x02R\x01y\"\x8e\x01\n" +
 	"\x05Input\x12\x12\n" +
 	"\x04move\x18\x01 \x01(\bR\x04move\x12\x1f\n" +
 	"\vstride_left\x18\x02 \x01(\bR\n" +
@@ -496,33 +560,35 @@ func file_server_proto_rawDescGZIP() []byte {
 	return file_server_proto_rawDescData
 }
 
-var file_server_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_server_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_server_proto_goTypes = []any{
 	(*BoolMessage)(nil), // 0: server.BoolMessage
 	(*GameCode)(nil),    // 1: server.GameCode
 	(*PlayerState)(nil), // 2: server.PlayerState
-	(*Input)(nil),       // 3: server.Input
-	(*PlayerData)(nil),  // 4: server.PlayerData
-	(*GameData)(nil),    // 5: server.GameData
-	(*Empty)(nil),       // 6: server.Empty
+	(*Position)(nil),    // 3: server.Position
+	(*Input)(nil),       // 4: server.Input
+	(*PlayerData)(nil),  // 5: server.PlayerData
+	(*GameData)(nil),    // 6: server.GameData
+	(*Empty)(nil),       // 7: server.Empty
 }
 var file_server_proto_depIdxs = []int32{
-	4, // 0: server.PlayerState.player:type_name -> server.PlayerData
-	3, // 1: server.PlayerState.input:type_name -> server.Input
-	4, // 2: server.GameData.players:type_name -> server.PlayerData
-	6, // 3: server.GameService.CreateGame:input_type -> server.Empty
-	4, // 4: server.GameService.JoinGame:input_type -> server.PlayerData
-	2, // 5: server.GameService.JoinInputUpdates:input_type -> server.PlayerState
-	1, // 6: server.GameService.StartGame:input_type -> server.GameCode
-	1, // 7: server.GameService.CreateGame:output_type -> server.GameCode
-	5, // 8: server.GameService.JoinGame:output_type -> server.GameData
-	2, // 9: server.GameService.JoinInputUpdates:output_type -> server.PlayerState
-	0, // 10: server.GameService.StartGame:output_type -> server.BoolMessage
-	7, // [7:11] is the sub-list for method output_type
-	3, // [3:7] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	5, // 0: server.PlayerState.player:type_name -> server.PlayerData
+	3, // 1: server.PlayerState.position:type_name -> server.Position
+	4, // 2: server.PlayerState.input:type_name -> server.Input
+	5, // 3: server.GameData.players:type_name -> server.PlayerData
+	7, // 4: server.GameService.CreateGame:input_type -> server.Empty
+	5, // 5: server.GameService.JoinGame:input_type -> server.PlayerData
+	2, // 6: server.GameService.JoinInputUpdates:input_type -> server.PlayerState
+	1, // 7: server.GameService.StartGame:input_type -> server.GameCode
+	1, // 8: server.GameService.CreateGame:output_type -> server.GameCode
+	6, // 9: server.GameService.JoinGame:output_type -> server.GameData
+	2, // 10: server.GameService.JoinInputUpdates:output_type -> server.PlayerState
+	0, // 11: server.GameService.StartGame:output_type -> server.BoolMessage
+	8, // [8:12] is the sub-list for method output_type
+	4, // [4:8] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_server_proto_init() }
@@ -536,7 +602,7 @@ func file_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_server_proto_rawDesc), len(file_server_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

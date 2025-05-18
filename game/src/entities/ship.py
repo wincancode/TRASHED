@@ -48,25 +48,26 @@ class Ship(Entity):
         return False  # Impacto no bloqueado
 
     def control(self, keys):
-        if keys[pygame.K_w]:
+        if keys["move"]:
             #accelerate where the ship is facing
             self.accelerationX = self.acceleration *math.sin(math.radians(self.angle))
             self.accelerationY = -self.acceleration *math.cos(math.radians(self.angle))
+
         else:
             self.accelerationX = 0
             self.accelerationY = 0
-        if keys[pygame.K_s]:
+        if keys["stop"]:
             self.accelerationX = 0
             self.accelerationY = 0
             # Aplicar desaceleración rápida
             self.speedX *= 0.98  # Reduce la velocidad en el eje X
             self.speedY *= 0.98 # Reduce la velocidad en el eje Y
             
-        if keys[pygame.K_a]:
+        if keys["stride_left"]:
             self.rotate(-self.angle_speed)
-        if keys[pygame.K_d]:
+        if keys["stride_right"]:
             self.rotate(self.angle_speed)
-        if keys[pygame.K_SPACE]:
+        if keys["is_shoot"]:
             if not self.space_pressed:
                 self.shoot()
                 self.space_pressed = True
