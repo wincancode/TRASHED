@@ -3,15 +3,21 @@ package gameLogic
 import (
 	"Trashed/Trashed/proto"
 	"math"
+	"time"
 )
 
 // ShipState represents the state of a ship in the game world.
 type ShipState struct {
-	PlayerUuid string
-	PosX      float64
-	PosY      float64
-	Angle     float64
-	Speed     float64
+	PlayerUuid      string
+	PosX            float64
+	PosY            float64
+	Angle           float64
+	Speed           float64
+	LaserBoostLevel int
+	ShieldActive    bool
+	ShieldCharges   int
+	Lives           int
+	LastShotTime    time.Time
 }
 
 // MovementInput represents the input for a ship's movement.
@@ -28,26 +34,24 @@ func degreesToRadians(degrees float64) float64 {
 }
 
 // UpdateShipPosition updates the ship's position and angle based on the input and current state, matching the Python and proto logic.
-// Angle is stored in radians.
-func UpdateShipPosition(position *proto.Position, input *proto.Input, deltaTime float64) (*proto.Position) {
+// Now uses ShipState instead of proto.Position.
+func UpdateShipPosition(ship *ShipState, input *proto.Input, deltaTime float64) *ShipState {
 	const (
-		shipAcceleration    = 60   // units per second
-		turnSpeed    = 1.2   // radians per second
-		deceleration = 0.98   // stop deceleration factor
+		shipAcceleration = 60   // units per second
+		turnSpeed       = 1.2   // radians per second
+		deceleration    = 0.98  // stop deceleration factor
 	)
 
-	if position == nil {
-		position = &proto.Position{X: 0, Y: 0}
+	if ship == nil {
+		ship = &ShipState{}
 	}
 
-
-	
 	// Calculate acceleration in the direction the ship is facing
 	accelerationX := 0.0
 	accelerationY := 0.0
 	if input.Move {
-		accelerationX = shipAcceleration * math.Sin(degreesToRadians(position.Angle))
-		accelerationY = -shipAcceleration * math.Cos(degreesToRadians(position.Angle))
+		accelerationX = shipAcceleration * math.Sin(degreesToRadians(ship.Angle))
+		accelerationY = -shipAcceleration * math.Cos(degreesToRadians(ship.Angle))
 	} else {
 		accelerationX = 0
 		accelerationY = 0
@@ -58,59 +62,51 @@ func UpdateShipPosition(position *proto.Position, input *proto.Input, deltaTime 
 		accelerationX = 0
 		accelerationY = 0
 		// Apply rapid deceleration to speed (mimic Python logic)
-		position.SpeedX *= deceleration
-		position.SpeedY *= deceleration
+		ship.Speed *= deceleration
 	}
-
-
-	
-
 
 	// Rotation (left/right)
 	if input.StrideLeft {
-		position.Angle -= turnSpeed  
+		ship.Angle -= turnSpeed
 	}
 	if input.StrideRight {
-		position.Angle += turnSpeed 
+		ship.Angle += turnSpeed
 	}
 
-	if position.Angle > 360{
-		position.Angle -= 360
-	} else {
-		if position.Angle < 0{
-			position.Angle += 360
-		}
-
+	if ship.Angle > 360 {
+		ship.Angle -= 360
+	} else if ship.Angle < 0 {
+		ship.Angle += 360
 	}
-	
 
 	// Update velocity based on acceleration
-	position.SpeedX += accelerationX * deltaTime
-	position.SpeedY += accelerationY * deltaTime
+	vx := ship.Speed * math.Sin(degreesToRadians(ship.Angle))
+	vy := -ship.Speed * math.Cos(degreesToRadians(ship.Angle))
+	vx += accelerationX * deltaTime
+	vy += accelerationY * deltaTime
 
 	// Apply friction if not accelerating
 	if accelerationX == 0 {
-		position.SpeedX -= shipAcceleration * deltaTime * sign(position.SpeedX)
-		if math.Abs(position.SpeedX) < 0.01 {
-			position.SpeedX = 0
+		vx -= shipAcceleration * deltaTime * sign(vx)
+		if math.Abs(vx) < 0.01 {
+			vx = 0
 		}
 	}
 	if accelerationY == 0 {
-		position.SpeedY -= shipAcceleration * deltaTime * sign(position.SpeedY)
-		if math.Abs(position.SpeedY) < 0.01 {
-			position.SpeedY = 0
+		vy -= shipAcceleration * deltaTime * sign(vy)
+		if math.Abs(vy) < 0.01 {
+			vy = 0
 		}
 	}
 
 	// Update position based on velocity
-	position.X += position.SpeedX * deltaTime
-	position.Y += position.SpeedY * deltaTime
+	ship.PosX += vx * deltaTime
+	ship.PosY += vy * deltaTime
 
-	// Store acceleration in the position struct
-	position.AccelerationX = accelerationX
-	position.AccelerationY = accelerationY
+	// Store speed for next tick
+	ship.Speed = math.Sqrt(vx*vx + vy*vy)
 
-	return position
+	return ship
 }
 
 func sign(x float64) float64 {

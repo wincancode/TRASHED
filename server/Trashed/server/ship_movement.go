@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 package main
 
 import (
@@ -51,4 +49,3 @@ func UpdateShipPosition(ship *ShipState, input *proto.Input, deltaTime float64) 
 	}
 	// Shooting logic can be handled elsewhere
 }
->>>>>>> 3a3f769b3c0404680e7ba7ef21a821a6fd870a4a

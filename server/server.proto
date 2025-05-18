@@ -61,8 +61,57 @@ message PlayerData{
     bool ready = 7;   
 }
 
+message AsteroidState {
+  int32 id = 1;
+  double x = 2;
+  double y = 3;
+  int32 width = 4;
+  int32 height = 5;
+  double speed = 6;
+  double angle = 7;
+  int32 health = 8;
+  int32 max_health = 9;
+}
+
+message BulletState {
+  int32 id = 1;
+  double x = 2;
+  double y = 3;
+  double angle = 4;
+  double speed = 5;
+  bool active = 6;
+  int32 damage = 7;
+  int32 width = 8;
+  int32 height = 9;
+}
+
+message PowerUpState {
+  int32 id = 1;
+  double x = 2;
+  double y = 3;
+  string type = 4;
+  int32 width = 5;
+  int32 height = 6;
+  bool active = 7;
+}
+
+
+message LevelState {
+  int32 current_level = 1;
+  int32 asteroids_destroyed = 2;
+  int32 asteroids_to_next_level = 3;
+  double level_up_message_timer = 4;
+  int32 min_asteroids = 5;
+  int32 difficulty_factor = 6;
+  int32 score = 7;
+}
+
 message GameState{
-  map<string, PlayerState> playerStates = 1; 
+  map<string, PlayerState> playerStates = 1;
+  repeated AsteroidState asteroids = 2;
+  repeated BulletState bullets = 3;
+  repeated PowerUpState powerups = 4;
+  LevelState level = 5;
 }
 
 message GameData {

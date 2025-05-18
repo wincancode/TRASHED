@@ -1,6 +1,3 @@
-
-
-
 import threading
 import time
 import pygame
@@ -42,13 +39,6 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
     powerups = []
     released_asteroids = []
 
-    #!!!!!!!!!!
-    MIN_ASTEROIDS = 10
-
-
-    for i in range(10):
-        asteroids.append(Asteroid(i))
-
 
     local_player_inputs =    {
             "move": False,
@@ -60,13 +50,66 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
         
     def obtain_game_state_callback(state):
-
         with lock:
+            # Update ships
             for ship in ships:
                 ship_state = state.playerStates[ship.id]
                 ship.setState(ship_state)
-                
-                
+
+            # Update asteroids from server state (do not clear, just update or add new ones)
+            asteroid_ids = set()
+            if hasattr(state, 'asteroids'):
+                for asteroid_state in state.asteroids:
+                    asteroid_ids.add(asteroid_state.id)
+                    # Try to find existing asteroid by id
+                    found = False
+                    for asteroid in asteroids:
+                        if asteroid.id == asteroid_state.id:
+                            asteroid.set_pos(asteroid_state.x, asteroid_state.y)
+                            asteroid.set_dimensions(asteroid_state.width, asteroid_state.height)
+                            asteroid.set_speed(asteroid_state.speed)
+                            asteroid.set_angle(asteroid_state.angle)
+                            asteroid.health = asteroid_state.health
+                            asteroid.max_health = asteroid_state.max_health
+                            asteroid.set_active(True)
+                            found = True
+                            break
+                    if not found:
+                        new_asteroid = Asteroid(asteroid_state.id)
+                        new_asteroid.set_pos(asteroid_state.x, asteroid_state.y)
+                        new_asteroid.set_dimensions(asteroid_state.width, asteroid_state.height)
+                        new_asteroid.set_speed(asteroid_state.speed)
+                        new_asteroid.set_angle(asteroid_state.angle)
+                        new_asteroid.health = asteroid_state.health
+                        new_asteroid.max_health = asteroid_state.max_health
+                        new_asteroid.set_active(True)
+                        asteroids.append(new_asteroid)
+                # Optionally, deactivate asteroids not present in the server state
+                for asteroid in asteroids:
+                    if asteroid.id not in asteroid_ids:
+                        asteroid.set_active(False)
+
+            # Update bullets for each ship (shared pool, assign to all ships for now)
+            for ship in ships:
+                ship.bullets.clear()
+            if hasattr(state, 'bullets'):
+                from entities.bullet import Bullet
+                for bullet_state in state.bullets:
+                    bullet = Bullet(
+                        bullet_state.x,
+                        bullet_state.y,
+                        bullet_state.angle
+                    )
+                    bullet.speed = bullet_state.speed
+                    bullet.active = bullet_state.active
+                    bullet.damage = bullet_state.damage
+                    bullet.width = bullet_state.width
+                    bullet.height = bullet_state.height
+                    # Assign to all ships for now (or filter by owner if you add that info)
+                    for ship in ships:
+                        ship.bullets.append(bullet)
+
+            # TODO: Add similar logic for powerups if needed
 
 
         # keys = {}
@@ -152,21 +195,21 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
         delta_time = clock.tick(stt.GAME_FPS) / 1000.0  # Convert milliseconds to seconds
 
-        if check_collisions(ship1, asteroids, released_asteroids):
-            if ship1.lives <= 0:
-                show_game_over_screen(screen, screen_width, screen_height)
-                running = False
-                break
+        # if check_collisions(ship1, asteroids, released_asteroids):
+        #     if ship1.lives <= 0:
+        #         show_game_over_screen(screen, screen_width, screen_height)
+        #         running = False
+        #         break
 
         # Manejar colisiones entre balas y asteroides
-        for ship in ships:
-            points, destroyed_count = handle_bullet_asteroid_collisions(ship.bullets, asteroids, messages, powerups, released_asteroids)
-            score += points  # Sumar los puntos obtenidos al puntaje total
-            level.update(destroyed_count, asteroids)  # Actualizar el progreso del nivel
+        # for ship in ships:
+        #     points, destroyed_count = handle_bullet_asteroid_collisions(ship.bullets, asteroids, messages, powerups, released_asteroids)
+        #     score += points  # Sumar los puntos obtenidos al puntaje total
+        #     level.update(destroyed_count, asteroids)  # Actualizar el progreso del nivel
 
         # Generar nuevos asteroides si el número es menor al mínimo
-        while len(asteroids) < level.min_asteroids:
-            asteroids.append(Asteroid(len(asteroids), difficulty_factor=level.difficulty_factor))
+        # while len(asteroids) < level.min_asteroids:
+        #      asteroids.append(Asteroid(len(asteroids), difficulty_factor=level.difficulty_factor))
 
 
         # Limpiar la pantalla
@@ -198,8 +241,8 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         for asteroid in released_asteroids[:]:
             asteroid.Update(delta_time, screen)
             asteroid.draw_health(screen)
-            if asteroid.health <= 0:
-                released_asteroids.remove(asteroid)
+            # if asteroid.health <= 0:
+            #     released_asteroids.remove(asteroid)
 
         # Mostrar el mensaje de "Subiste de Nivel"
         if level.level_up_message_timer > 0:

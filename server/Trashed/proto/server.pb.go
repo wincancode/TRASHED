@@ -445,16 +445,420 @@ func (x *PlayerData) GetReady() bool {
 	return false
 }
 
+type AsteroidState struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	X             float64                `protobuf:"fixed64,2,opt,name=x,proto3" json:"x,omitempty"`
+	Y             float64                `protobuf:"fixed64,3,opt,name=y,proto3" json:"y,omitempty"`
+	Width         int32                  `protobuf:"varint,4,opt,name=width,proto3" json:"width,omitempty"`
+	Height        int32                  `protobuf:"varint,5,opt,name=height,proto3" json:"height,omitempty"`
+	Speed         float64                `protobuf:"fixed64,6,opt,name=speed,proto3" json:"speed,omitempty"`
+	Angle         float64                `protobuf:"fixed64,7,opt,name=angle,proto3" json:"angle,omitempty"`
+	Health        int32                  `protobuf:"varint,8,opt,name=health,proto3" json:"health,omitempty"`
+	MaxHealth     int32                  `protobuf:"varint,9,opt,name=max_health,json=maxHealth,proto3" json:"max_health,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AsteroidState) Reset() {
+	*x = AsteroidState{}
+	mi := &file_server_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AsteroidState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AsteroidState) ProtoMessage() {}
+
+func (x *AsteroidState) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AsteroidState.ProtoReflect.Descriptor instead.
+func (*AsteroidState) Descriptor() ([]byte, []int) {
+	return file_server_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *AsteroidState) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *AsteroidState) GetX() float64 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *AsteroidState) GetY() float64 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *AsteroidState) GetWidth() int32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *AsteroidState) GetHeight() int32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
+func (x *AsteroidState) GetSpeed() float64 {
+	if x != nil {
+		return x.Speed
+	}
+	return 0
+}
+
+func (x *AsteroidState) GetAngle() float64 {
+	if x != nil {
+		return x.Angle
+	}
+	return 0
+}
+
+func (x *AsteroidState) GetHealth() int32 {
+	if x != nil {
+		return x.Health
+	}
+	return 0
+}
+
+func (x *AsteroidState) GetMaxHealth() int32 {
+	if x != nil {
+		return x.MaxHealth
+	}
+	return 0
+}
+
+type BulletState struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	X             float64                `protobuf:"fixed64,2,opt,name=x,proto3" json:"x,omitempty"`
+	Y             float64                `protobuf:"fixed64,3,opt,name=y,proto3" json:"y,omitempty"`
+	Angle         float64                `protobuf:"fixed64,4,opt,name=angle,proto3" json:"angle,omitempty"`
+	Speed         float64                `protobuf:"fixed64,5,opt,name=speed,proto3" json:"speed,omitempty"`
+	Active        bool                   `protobuf:"varint,6,opt,name=active,proto3" json:"active,omitempty"`
+	Damage        int32                  `protobuf:"varint,7,opt,name=damage,proto3" json:"damage,omitempty"`
+	Width         int32                  `protobuf:"varint,8,opt,name=width,proto3" json:"width,omitempty"`
+	Height        int32                  `protobuf:"varint,9,opt,name=height,proto3" json:"height,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BulletState) Reset() {
+	*x = BulletState{}
+	mi := &file_server_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BulletState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BulletState) ProtoMessage() {}
+
+func (x *BulletState) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BulletState.ProtoReflect.Descriptor instead.
+func (*BulletState) Descriptor() ([]byte, []int) {
+	return file_server_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *BulletState) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *BulletState) GetX() float64 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *BulletState) GetY() float64 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *BulletState) GetAngle() float64 {
+	if x != nil {
+		return x.Angle
+	}
+	return 0
+}
+
+func (x *BulletState) GetSpeed() float64 {
+	if x != nil {
+		return x.Speed
+	}
+	return 0
+}
+
+func (x *BulletState) GetActive() bool {
+	if x != nil {
+		return x.Active
+	}
+	return false
+}
+
+func (x *BulletState) GetDamage() int32 {
+	if x != nil {
+		return x.Damage
+	}
+	return 0
+}
+
+func (x *BulletState) GetWidth() int32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *BulletState) GetHeight() int32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
+type PowerUpState struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	X             float64                `protobuf:"fixed64,2,opt,name=x,proto3" json:"x,omitempty"`
+	Y             float64                `protobuf:"fixed64,3,opt,name=y,proto3" json:"y,omitempty"`
+	Type          string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
+	Width         int32                  `protobuf:"varint,5,opt,name=width,proto3" json:"width,omitempty"`
+	Height        int32                  `protobuf:"varint,6,opt,name=height,proto3" json:"height,omitempty"`
+	Active        bool                   `protobuf:"varint,7,opt,name=active,proto3" json:"active,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PowerUpState) Reset() {
+	*x = PowerUpState{}
+	mi := &file_server_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PowerUpState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PowerUpState) ProtoMessage() {}
+
+func (x *PowerUpState) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PowerUpState.ProtoReflect.Descriptor instead.
+func (*PowerUpState) Descriptor() ([]byte, []int) {
+	return file_server_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *PowerUpState) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *PowerUpState) GetX() float64 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *PowerUpState) GetY() float64 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *PowerUpState) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *PowerUpState) GetWidth() int32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *PowerUpState) GetHeight() int32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
+func (x *PowerUpState) GetActive() bool {
+	if x != nil {
+		return x.Active
+	}
+	return false
+}
+
+type LevelState struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	CurrentLevel         int32                  `protobuf:"varint,1,opt,name=current_level,json=currentLevel,proto3" json:"current_level,omitempty"`
+	AsteroidsDestroyed   int32                  `protobuf:"varint,2,opt,name=asteroids_destroyed,json=asteroidsDestroyed,proto3" json:"asteroids_destroyed,omitempty"`
+	AsteroidsToNextLevel int32                  `protobuf:"varint,3,opt,name=asteroids_to_next_level,json=asteroidsToNextLevel,proto3" json:"asteroids_to_next_level,omitempty"`
+	LevelUpMessageTimer  float64                `protobuf:"fixed64,4,opt,name=level_up_message_timer,json=levelUpMessageTimer,proto3" json:"level_up_message_timer,omitempty"`
+	MinAsteroids         int32                  `protobuf:"varint,5,opt,name=min_asteroids,json=minAsteroids,proto3" json:"min_asteroids,omitempty"`
+	DifficultyFactor     int32                  `protobuf:"varint,6,opt,name=difficulty_factor,json=difficultyFactor,proto3" json:"difficulty_factor,omitempty"`
+	Score                int32                  `protobuf:"varint,7,opt,name=score,proto3" json:"score,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *LevelState) Reset() {
+	*x = LevelState{}
+	mi := &file_server_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LevelState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LevelState) ProtoMessage() {}
+
+func (x *LevelState) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LevelState.ProtoReflect.Descriptor instead.
+func (*LevelState) Descriptor() ([]byte, []int) {
+	return file_server_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *LevelState) GetCurrentLevel() int32 {
+	if x != nil {
+		return x.CurrentLevel
+	}
+	return 0
+}
+
+func (x *LevelState) GetAsteroidsDestroyed() int32 {
+	if x != nil {
+		return x.AsteroidsDestroyed
+	}
+	return 0
+}
+
+func (x *LevelState) GetAsteroidsToNextLevel() int32 {
+	if x != nil {
+		return x.AsteroidsToNextLevel
+	}
+	return 0
+}
+
+func (x *LevelState) GetLevelUpMessageTimer() float64 {
+	if x != nil {
+		return x.LevelUpMessageTimer
+	}
+	return 0
+}
+
+func (x *LevelState) GetMinAsteroids() int32 {
+	if x != nil {
+		return x.MinAsteroids
+	}
+	return 0
+}
+
+func (x *LevelState) GetDifficultyFactor() int32 {
+	if x != nil {
+		return x.DifficultyFactor
+	}
+	return 0
+}
+
+func (x *LevelState) GetScore() int32 {
+	if x != nil {
+		return x.Score
+	}
+	return 0
+}
+
 type GameState struct {
 	state         protoimpl.MessageState  `protogen:"open.v1"`
 	PlayerStates  map[string]*PlayerState `protobuf:"bytes,1,rep,name=playerStates,proto3" json:"playerStates,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Asteroids     []*AsteroidState        `protobuf:"bytes,2,rep,name=asteroids,proto3" json:"asteroids,omitempty"`
+	Bullets       []*BulletState          `protobuf:"bytes,3,rep,name=bullets,proto3" json:"bullets,omitempty"`
+	Powerups      []*PowerUpState         `protobuf:"bytes,4,rep,name=powerups,proto3" json:"powerups,omitempty"`
+	Level         *LevelState             `protobuf:"bytes,5,opt,name=level,proto3" json:"level,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GameState) Reset() {
 	*x = GameState{}
-	mi := &file_server_proto_msgTypes[6]
+	mi := &file_server_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -466,7 +870,7 @@ func (x *GameState) String() string {
 func (*GameState) ProtoMessage() {}
 
 func (x *GameState) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_msgTypes[6]
+	mi := &file_server_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -479,12 +883,40 @@ func (x *GameState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameState.ProtoReflect.Descriptor instead.
 func (*GameState) Descriptor() ([]byte, []int) {
-	return file_server_proto_rawDescGZIP(), []int{6}
+	return file_server_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GameState) GetPlayerStates() map[string]*PlayerState {
 	if x != nil {
 		return x.PlayerStates
+	}
+	return nil
+}
+
+func (x *GameState) GetAsteroids() []*AsteroidState {
+	if x != nil {
+		return x.Asteroids
+	}
+	return nil
+}
+
+func (x *GameState) GetBullets() []*BulletState {
+	if x != nil {
+		return x.Bullets
+	}
+	return nil
+}
+
+func (x *GameState) GetPowerups() []*PowerUpState {
+	if x != nil {
+		return x.Powerups
+	}
+	return nil
+}
+
+func (x *GameState) GetLevel() *LevelState {
+	if x != nil {
+		return x.Level
 	}
 	return nil
 }
@@ -500,7 +932,7 @@ type GameData struct {
 
 func (x *GameData) Reset() {
 	*x = GameData{}
-	mi := &file_server_proto_msgTypes[7]
+	mi := &file_server_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -512,7 +944,7 @@ func (x *GameData) String() string {
 func (*GameData) ProtoMessage() {}
 
 func (x *GameData) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_msgTypes[7]
+	mi := &file_server_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -525,7 +957,7 @@ func (x *GameData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameData.ProtoReflect.Descriptor instead.
 func (*GameData) Descriptor() ([]byte, []int) {
-	return file_server_proto_rawDescGZIP(), []int{7}
+	return file_server_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GameData) GetCode() string {
@@ -557,7 +989,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_server_proto_msgTypes[8]
+	mi := &file_server_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -569,7 +1001,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_msgTypes[8]
+	mi := &file_server_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -582,7 +1014,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_server_proto_rawDescGZIP(), []int{8}
+	return file_server_proto_rawDescGZIP(), []int{12}
 }
 
 var File_server_proto protoreflect.FileDescriptor
@@ -625,9 +1057,51 @@ const file_server_proto_rawDesc = "" +
 	"\x05color\x18\x04 \x01(\tR\x05color\x12\x12\n" +
 	"\x04slot\x18\x05 \x01(\x05R\x04slot\x12\x1b\n" +
 	"\tgame_code\x18\x06 \x01(\tR\bgameCode\x12\x14\n" +
-	"\x05ready\x18\a \x01(\bR\x05ready\"\xaa\x01\n" +
+	"\x05ready\x18\a \x01(\bR\x05ready\"\xcc\x01\n" +
+	"\rAsteroidState\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\f\n" +
+	"\x01x\x18\x02 \x01(\x01R\x01x\x12\f\n" +
+	"\x01y\x18\x03 \x01(\x01R\x01y\x12\x14\n" +
+	"\x05width\x18\x04 \x01(\x05R\x05width\x12\x16\n" +
+	"\x06height\x18\x05 \x01(\x05R\x06height\x12\x14\n" +
+	"\x05speed\x18\x06 \x01(\x01R\x05speed\x12\x14\n" +
+	"\x05angle\x18\a \x01(\x01R\x05angle\x12\x16\n" +
+	"\x06health\x18\b \x01(\x05R\x06health\x12\x1d\n" +
+	"\n" +
+	"max_health\x18\t \x01(\x05R\tmaxHealth\"\xc3\x01\n" +
+	"\vBulletState\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\f\n" +
+	"\x01x\x18\x02 \x01(\x01R\x01x\x12\f\n" +
+	"\x01y\x18\x03 \x01(\x01R\x01y\x12\x14\n" +
+	"\x05angle\x18\x04 \x01(\x01R\x05angle\x12\x14\n" +
+	"\x05speed\x18\x05 \x01(\x01R\x05speed\x12\x16\n" +
+	"\x06active\x18\x06 \x01(\bR\x06active\x12\x16\n" +
+	"\x06damage\x18\a \x01(\x05R\x06damage\x12\x14\n" +
+	"\x05width\x18\b \x01(\x05R\x05width\x12\x16\n" +
+	"\x06height\x18\t \x01(\x05R\x06height\"\x94\x01\n" +
+	"\fPowerUpState\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\f\n" +
+	"\x01x\x18\x02 \x01(\x01R\x01x\x12\f\n" +
+	"\x01y\x18\x03 \x01(\x01R\x01y\x12\x12\n" +
+	"\x04type\x18\x04 \x01(\tR\x04type\x12\x14\n" +
+	"\x05width\x18\x05 \x01(\x05R\x05width\x12\x16\n" +
+	"\x06height\x18\x06 \x01(\x05R\x06height\x12\x16\n" +
+	"\x06active\x18\a \x01(\bR\x06active\"\xb6\x02\n" +
+	"\n" +
+	"LevelState\x12#\n" +
+	"\rcurrent_level\x18\x01 \x01(\x05R\fcurrentLevel\x12/\n" +
+	"\x13asteroids_destroyed\x18\x02 \x01(\x05R\x12asteroidsDestroyed\x125\n" +
+	"\x17asteroids_to_next_level\x18\x03 \x01(\x05R\x14asteroidsToNextLevel\x123\n" +
+	"\x16level_up_message_timer\x18\x04 \x01(\x01R\x13levelUpMessageTimer\x12#\n" +
+	"\rmin_asteroids\x18\x05 \x01(\x05R\fminAsteroids\x12+\n" +
+	"\x11difficulty_factor\x18\x06 \x01(\x05R\x10difficultyFactor\x12\x14\n" +
+	"\x05score\x18\a \x01(\x05R\x05score\"\xea\x02\n" +
 	"\tGameState\x12G\n" +
-	"\fplayerStates\x18\x01 \x03(\v2#.server.GameState.PlayerStatesEntryR\fplayerStates\x1aT\n" +
+	"\fplayerStates\x18\x01 \x03(\v2#.server.GameState.PlayerStatesEntryR\fplayerStates\x123\n" +
+	"\tasteroids\x18\x02 \x03(\v2\x15.server.AsteroidStateR\tasteroids\x12-\n" +
+	"\abullets\x18\x03 \x03(\v2\x13.server.BulletStateR\abullets\x120\n" +
+	"\bpowerups\x18\x04 \x03(\v2\x14.server.PowerUpStateR\bpowerups\x12(\n" +
+	"\x05level\x18\x05 \x01(\v2\x12.server.LevelStateR\x05level\x1aT\n" +
 	"\x11PlayerStatesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12)\n" +
 	"\x05value\x18\x02 \x01(\v2\x13.server.PlayerStateR\x05value:\x028\x01\"f\n" +
@@ -655,38 +1129,46 @@ func file_server_proto_rawDescGZIP() []byte {
 	return file_server_proto_rawDescData
 }
 
-var file_server_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_server_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_server_proto_goTypes = []any{
-	(*BoolMessage)(nil), // 0: server.BoolMessage
-	(*GameCode)(nil),    // 1: server.GameCode
-	(*PlayerState)(nil), // 2: server.PlayerState
-	(*Position)(nil),    // 3: server.Position
-	(*Input)(nil),       // 4: server.Input
-	(*PlayerData)(nil),  // 5: server.PlayerData
-	(*GameState)(nil),   // 6: server.GameState
-	(*GameData)(nil),    // 7: server.GameData
-	(*Empty)(nil),       // 8: server.Empty
-	nil,                 // 9: server.GameState.PlayerStatesEntry
+	(*BoolMessage)(nil),   // 0: server.BoolMessage
+	(*GameCode)(nil),      // 1: server.GameCode
+	(*PlayerState)(nil),   // 2: server.PlayerState
+	(*Position)(nil),      // 3: server.Position
+	(*Input)(nil),         // 4: server.Input
+	(*PlayerData)(nil),    // 5: server.PlayerData
+	(*AsteroidState)(nil), // 6: server.AsteroidState
+	(*BulletState)(nil),   // 7: server.BulletState
+	(*PowerUpState)(nil),  // 8: server.PowerUpState
+	(*LevelState)(nil),    // 9: server.LevelState
+	(*GameState)(nil),     // 10: server.GameState
+	(*GameData)(nil),      // 11: server.GameData
+	(*Empty)(nil),         // 12: server.Empty
+	nil,                   // 13: server.GameState.PlayerStatesEntry
 }
 var file_server_proto_depIdxs = []int32{
-	4, // 0: server.PlayerState.input:type_name -> server.Input
-	3, // 1: server.PlayerState.position:type_name -> server.Position
-	9, // 2: server.GameState.playerStates:type_name -> server.GameState.PlayerStatesEntry
-	5, // 3: server.GameData.players:type_name -> server.PlayerData
-	2, // 4: server.GameState.PlayerStatesEntry.value:type_name -> server.PlayerState
-	8, // 5: server.GameService.CreateGame:input_type -> server.Empty
-	5, // 6: server.GameService.JoinGame:input_type -> server.PlayerData
-	2, // 7: server.GameService.JoinInputUpdates:input_type -> server.PlayerState
-	1, // 8: server.GameService.StartGame:input_type -> server.GameCode
-	1, // 9: server.GameService.CreateGame:output_type -> server.GameCode
-	7, // 10: server.GameService.JoinGame:output_type -> server.GameData
-	6, // 11: server.GameService.JoinInputUpdates:output_type -> server.GameState
-	0, // 12: server.GameService.StartGame:output_type -> server.BoolMessage
-	9, // [9:13] is the sub-list for method output_type
-	5, // [5:9] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	4,  // 0: server.PlayerState.input:type_name -> server.Input
+	3,  // 1: server.PlayerState.position:type_name -> server.Position
+	13, // 2: server.GameState.playerStates:type_name -> server.GameState.PlayerStatesEntry
+	6,  // 3: server.GameState.asteroids:type_name -> server.AsteroidState
+	7,  // 4: server.GameState.bullets:type_name -> server.BulletState
+	8,  // 5: server.GameState.powerups:type_name -> server.PowerUpState
+	9,  // 6: server.GameState.level:type_name -> server.LevelState
+	5,  // 7: server.GameData.players:type_name -> server.PlayerData
+	2,  // 8: server.GameState.PlayerStatesEntry.value:type_name -> server.PlayerState
+	12, // 9: server.GameService.CreateGame:input_type -> server.Empty
+	5,  // 10: server.GameService.JoinGame:input_type -> server.PlayerData
+	2,  // 11: server.GameService.JoinInputUpdates:input_type -> server.PlayerState
+	1,  // 12: server.GameService.StartGame:input_type -> server.GameCode
+	1,  // 13: server.GameService.CreateGame:output_type -> server.GameCode
+	11, // 14: server.GameService.JoinGame:output_type -> server.GameData
+	10, // 15: server.GameService.JoinInputUpdates:output_type -> server.GameState
+	0,  // 16: server.GameService.StartGame:output_type -> server.BoolMessage
+	13, // [13:17] is the sub-list for method output_type
+	9,  // [9:13] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_server_proto_init() }
@@ -700,7 +1182,7 @@ func file_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_server_proto_rawDesc), len(file_server_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
