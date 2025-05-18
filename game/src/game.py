@@ -79,12 +79,8 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                         asteroid.set_active(True)
                     else:
                         asteroid = Asteroid(asteroid_state.id)
-                        # Predict previous position for smooth interpolation
-                        dt = INTERPOLATION_DELAY
-                        dx = asteroid_state.speed * math.cos(math.radians(asteroid_state.angle)) * dt
-                        dy = asteroid_state.speed * math.sin(math.radians(asteroid_state.angle)) * dt
-                        asteroid.prev_posX = asteroid_state.x - dx
-                        asteroid.prev_posY = asteroid_state.y - dy
+                        asteroid.prev_posX = asteroid_state.x
+                        asteroid.prev_posY = asteroid_state.y
                         asteroid.next_posX = asteroid_state.x
                         asteroid.next_posY = asteroid_state.y
                         asteroid.last_update_time = time.time()
@@ -142,9 +138,16 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                         if ships:
                             ships[0].bullets.append(bullet)
             
-                        
+            #Update level state 
+            if hasattr(state, 'level'):
+                level.current_level = state.level.current_level
+                level.score = state.level.score
+                level.asteroids_destroyed = state.level.asteroids_destroyed
+                level.asteroids_to_next_level = state.level.asteroids_to_next_level
+                level.difficulty_factor = state.level.difficulty_factor
+                level.level_up_message_timer = state.level.level_up_message_timer                
 
-            # TODO: Add similar logic for powerups if needed
+
 
 
         # keys = {}
@@ -215,7 +218,6 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
     #     ship1.control(keys)
     #     ship1.updatePosition(deltaTime)
 
-    score = 0
 
     # Inicializar el sistema de niveles
     level = Level()
@@ -297,7 +299,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
 
         # Mostrar la puntuación acumulada
-        draw_text(screen, f"Puntos: {score}", (10, 10), (255, 255, 255))
+        draw_text(screen, f"Puntos: {level.score}", (10, 10), (255, 255, 255))
 
         # Mostrar las vidas
         draw_text(screen, f"Vidas: {ship1.lives}", (screen_width - 120, 10), (255, 255, 255))

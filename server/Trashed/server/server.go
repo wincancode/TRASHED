@@ -247,7 +247,7 @@ func (s *server) runGameLoop(gameCode string) {
 
 		//instantiate asteroids if needed
 		if len(game.Asteroids) < game.Level.MinAsteroids {
-			asteroid := gameLogic.InitializeAsteroid(len(game.Asteroids), game.Level.DifficultyFactor)
+			asteroid := gameLogic.InitializeAsteroid(rand.Int(), game.Level.DifficultyFactor)
 			game.Asteroids[asteroid.ID] = &asteroid
 		}
 
@@ -266,6 +266,7 @@ func (s *server) runGameLoop(gameCode string) {
 			game.Asteroids,
 			game.PowerUps,
 		)
+		game.Level.Score += points
 
 		
 		//*destroy deactivated objects
@@ -284,18 +285,11 @@ func (s *server) runGameLoop(gameCode string) {
 			}
 		}
 
-		
-		
-
 
 
 		game.Level.AsteroidsDestroyed += destroyed_count
-		game.Level.AsteroidsToNextLevel -= destroyed_count
-		if game.Level.AsteroidsToNextLevel <= 0 {
-			game.Level.CurrentLevel++
-			game.Level.AsteroidsToNextLevel = 10 + game.Level.CurrentLevel*5
-			game.Level.MinAsteroids += 5
-			game.Level.DifficultyFactor++
+		if game.Level.AsteroidsToNextLevel <= game.Level.AsteroidsDestroyed {
+			gameLogic.UpdateLevel(game.Level, destroyed_count, game.Asteroids)
 		}
 
 		game.Level.LevelUpMessageTimer -= deltaTime
@@ -303,25 +297,31 @@ func (s *server) runGameLoop(gameCode string) {
 			game.Level.LevelUpMessageTimer = 0
 		}
 
-		game.Level.Score += points
 
 
 		
-		//Manage ASteroid and bullet collisions
 		
-		// # Manejar colisiones entre balas y asteroides
-        // # for ship in ships:
-        // #     points, destroyed_count = handle_bullet_asteroid_collisions(ship.bullets, asteroids, messages, powerups, released_asteroids)
-        // #     score += points  # Sumar los puntos obtenidos al puntaje total
-        // #     level.update(destroyed_count, asteroids)  # Actualizar el progreso del nivel
 
-        // # Generar nuevos asteroides si el número es menor al mínimo
-        // # while len(asteroids) < level.min_asteroids:
-        // #      asteroids.append(Asteroid(len(asteroids), difficulty_factor=level.difficulty_factor))
+		//*PlayerUpdates
 
+		releasedAsteroids := make([]gameLogic.Asteroid, 0)
 
+		// Check for collisions between ships and asteroids
+		for _, ship := range game.Ships {
+			gameLogic.HandleShipAsteroidCollisions(
+				ship,
+				game.Asteroids,
+				&releasedAsteroids,
+			)
+		}
 
-		//*Updates
+		//add the released asteroids to the game
+		for _, releasedAsteroid := range releasedAsteroids {
+			game.Asteroids[releasedAsteroid.ID] = &releasedAsteroid
+		}
+
+		
+
 
 		// Update all ships
 		for playerID, ship := range game.Ships {
@@ -331,6 +331,7 @@ func (s *server) runGameLoop(gameCode string) {
 			}
 			game.Ships[playerID] = gameLogic.UpdateShipPosition(ship, input, deltaTime)
 		}
+		
 
 
 		// Convert all ShipStates to proto.PlayerStates
@@ -372,6 +373,9 @@ func LevelToProto(level *gameLogic.Level) *proto.LevelState {
 		AsteroidsDestroyed:   int32(level.AsteroidsDestroyed),
 		AsteroidsToNextLevel: int32(level.AsteroidsToNextLevel),
 		LevelUpMessageTimer:  level.LevelUpMessageTimer,
+		MinAsteroids:         int32(level.MinAsteroids),
+		DifficultyFactor:     int32(level.DifficultyFactor),
+		Score:               int32(level.Score),
 	}
 }
 
