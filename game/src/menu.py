@@ -119,6 +119,7 @@ def show_start_screen():
         # Draw buttons
         create_game = draw_button(screen, "Crear partida", button_x, button_y + button_height + button_spacing, button_width, button_height, font_button, stt.BLACK, stt.BLUE, mouse_pos, click)
         join_game = draw_button(screen, "Unirse a partida", button_x, button_y, button_width, button_height, font_button, stt.BLACK, stt.BLUE, mouse_pos, click)
+        tutorial = draw_button(screen, "Tutorial", button_x, button_y + 2 * (button_height + button_spacing), button_width, button_height, font_button, stt.BLACK, stt.BLUE, mouse_pos, click)
 
         if join_game:
             print("Unirse a partida seleccionado")
@@ -126,7 +127,10 @@ def show_start_screen():
         if create_game:
             print("Crear partida seleccionado")
             return "create"
-
+        if tutorial:
+            print("Tutorial seleccionado")
+            return "tutorial"
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
