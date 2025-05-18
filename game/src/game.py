@@ -8,7 +8,7 @@ from entities.ship import Ship
 from entities.asteroid import Asteroid
 from entities.powerup import apply_powerup_effect
 from collision import check_collisions, handle_bullet_asteroid_collisions, check_powerup_collisions
-from connectivity import join_input_updates
+from connectivity import join_game_state_updates
 import server.service_pb2 as service_pb2
 from menu import show_game_over_screen
 import settings as stt
@@ -59,21 +59,29 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         }
 
         
-    def obtain_inputs_callback(inputs):
-        
-        keys = {}
-
-        keys["move"] = inputs.input.move
-        keys["stride_left"] = inputs.input.stride_left
-        keys["stride_right"] = inputs.input.stride_right
-        keys["stop"] = inputs.input.stop
-        keys["is_shoot"] = inputs.input.is_shoot
+    def obtain_game_state_callback(state):
 
         with lock:
-            nonlocal ships
-            for ship in ships:   
-                if ship.id == inputs.player.player_uuid:
-                    ship.control(keys)
+            for ship in ships:
+                ship_state = state.playerStates[ship.id]
+                ship.setState(ship_state)
+                
+                
+
+
+        # keys = {}
+
+        # keys["move"] = inputs.input.move
+        # keys["stride_left"] = inputs.input.stride_left
+        # keys["stride_right"] = inputs.input.stride_right
+        # keys["stop"] = inputs.input.stop
+        # keys["is_shoot"] = inputs.input.is_shoot
+
+        # with lock:
+        #     nonlocal ships
+        #     for ship in ships:   
+        #         if ship.id == inputs.player.player_uuid:
+        #             ship.control(keys)
                 
 
     def local_player_input_iterator():
@@ -82,7 +90,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                 nonlocal local_player_inputs                
                 yield service_pb2.PlayerState(
                 code=game_code,
-                player=service_pb2.PlayerData(player_uuid=user_uuid), 
+                player_uuid= user_uuid,
                 timestamp=int(pygame.time.get_ticks()),
                 input=service_pb2.Input(
                     move=local_player_inputs["move"],
@@ -95,8 +103,8 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             time.sleep(0.01)  # Delay to control the rate of sending inputs
 
     Input_updates_thread = threading.Thread(
-        target=join_input_updates,
-        args=(game_code,user_uuid,obtain_inputs_callback,local_player_input_iterator)
+        target=join_game_state_updates,
+        args=(game_code,user_uuid,obtain_game_state_callback,local_player_input_iterator)
     )
     Input_updates_thread.start()
 

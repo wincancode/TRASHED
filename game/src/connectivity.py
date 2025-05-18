@@ -66,7 +66,7 @@ def request_start_game(game_code):
 
 
 
-def join_input_updates(code, player_uuid, obtain_input_callback,player_input_iterator):
+def join_game_state_updates(code, player_uuid, obtain_input_callback,player_input_iterator):
     channel = grpc.insecure_channel(DIRECTION)
     stub = service_pb2_grpc.GameServiceStub(channel)
 

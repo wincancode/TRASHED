@@ -98,3 +98,24 @@ class Ship(Entity):
                 self.width,  # Radio del círculo (igual al ancho de la nave)
                 3  # Grosor del borde del círculo
             )
+
+    def setState(self, state):
+        """Establece el estado de la nave."""
+        if state is None or not hasattr(state, "position") or state.position is None:
+            return
+
+        pos = state.position
+        if getattr(pos, "x", None) is not None and getattr(pos, "y", None) is not None:
+            self.set_pos(pos.x, pos.y)
+        if hasattr(pos, "angle") and pos.angle is not None:
+            self.set_angle(pos.angle)
+        if hasattr(pos, "speedX") and pos.speedX is not None:
+            self.speedX = pos.speedX
+        if hasattr(pos, "speedY") and pos.speedY is not None:
+            self.speedY = pos.speedY
+        if hasattr(pos, "accelerationX") and pos.accelerationX is not None:
+            self.accelerationX = pos.accelerationX
+        if hasattr(pos, "accelerationY") and pos.accelerationY is not None:
+            self.accelerationY = pos.accelerationY
+        if hasattr(pos, "speed",) and pos.speed is not None:
+            self.set_speed(pos.speed)

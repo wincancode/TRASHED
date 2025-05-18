@@ -10,7 +10,7 @@ option go_package = "Trashed/proto";
 service GameService {
   rpc CreateGame (Empty) returns (GameCode);
   rpc JoinGame (PlayerData) returns (stream GameData);
-  rpc JoinInputUpdates(stream PlayerState) returns(stream PlayerState);
+  rpc JoinInputUpdates(stream PlayerState) returns(stream GameState);
   rpc StartGame(GameCode) returns(BoolMessage);
 }
 
@@ -25,15 +25,20 @@ message GameCode{
 
 message PlayerState{
     string code = 1;
-    PlayerData player = 2;
+    string player_uuid = 2;
     int64 timestamp = 3;    //For sync
-    Position position = 4;
     Input input = 5;
+    Position position = 6;
 }
 
 message Position{
-    float x = 1;
-    float y = 2;
+    double x = 1;
+    double y = 2;
+    double angle = 3;
+    double speedX = 4;
+    double speedY = 5;
+    double accelerationX = 6;
+    double accelerationY = 7;
 }
 
 
@@ -46,7 +51,6 @@ message Input{
 }
 
 
-
 message PlayerData{
     string player_uuid = 1;
     int64 timestamp = 2;     //For sync
@@ -57,16 +61,14 @@ message PlayerData{
     bool ready = 7;   
 }
 
-
-
+message GameState{
+  map<string, PlayerState> playerStates = 1; 
+}
 
 message GameData {
   string code = 1;                     // Unique game code
-  repeated PlayerState players = 2;     // List of players in the game
+  repeated PlayerData players = 2;     // List of players in the game
   bool started = 4;
 }
-
-
-
 
 message Empty{}

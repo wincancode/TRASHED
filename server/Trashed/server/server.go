@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Trashed/Trashed/gameLogic"
 	"Trashed/Trashed/proto"
 	"context"
 	"fmt"
@@ -24,12 +25,13 @@ type server struct {
 type game struct {
 	Data *proto.GameData
 	SubscribedInputStreams map[string]proto.GameService_JoinInputUpdatesServer 
+	states *proto.GameState
+	LatestInputs map[string]*proto.Input // Store latest input per player
 }
 
 func NewServer() *server {
 	return &server{
 		games: make(map[string]game),
-		
 	}
 }
 
@@ -49,6 +51,10 @@ func generateGameCode() string {
 	for i := range code {
 		code[i] = charset[rand.Intn(len(charset))]
 	}
+
+
+	//!!!!!!!!!!!!!!!!!!!!
+	code = []byte("2")
 	return string(code)
 }
 
@@ -146,81 +152,129 @@ func (s *server) StartGame(ctx context.Context, in *proto.GameCode) (*proto.Bool
 		return &proto.BoolMessage{Value: false}, fmt.Errorf("partida no encontrada")
 	}
 
+	//inicializar estados del juego
+	PlayerStates := make(map[string]*proto.PlayerState)
+	for _, player := range game.Data.Players {
+		PlayerStates[player.PlayerUuid] = &proto.PlayerState{
+			Code: gameCode,
+			PlayerUuid: player.PlayerUuid,
+			Timestamp: time.Now().Unix(),
+			Position: &proto.Position{
+				X: 800/2,
+				Y: 600/2,
+				Angle: 360,
+				SpeedX: 0,
+				SpeedY: 0,
+				AccelerationX: 0,
+				AccelerationY: 0,
+			},
+		}
+	}
+	game.states = &proto.GameState{
+		PlayerStates: PlayerStates,
+	}
+	// Initialize LatestInputs map
+	game.LatestInputs = make(map[string]*proto.Input)
+	s.games[gameCode] = game
+
 	// Marcar la partida como iniciada
 	game.Data.Started = true
-	
+
+	// Start the fixed-tick game loop
+	go s.runGameLoop(gameCode)
+
 	log.Printf("Partida iniciada: %s", gameCode)
 	return &proto.BoolMessage{Value: true}, nil;
 }
 
-
+// Fixed-tick game loop for each game
+func (s *server) runGameLoop(gameCode string) {
+	ticker := time.NewTicker(time.Second / 60) // 60 FPS
+	defer ticker.Stop()
+	var lastTick = time.Now()
+	for {
+		<-ticker.C
+		deltaTime := time.Since(lastTick).Seconds()
+		lastTick = time.Now()
+		s.mu.Lock()
+		game, exists := s.games[gameCode]
+		if !exists || !game.Data.Started {
+			s.mu.Unlock()
+			return
+		}
+		for playerID, playerState := range game.states.PlayerStates {
+			input := game.LatestInputs[playerID]
+			if input == nil {
+				input = &proto.Input{} // default input if none received
+			}
+			position := playerState.Position
+			new_state := gameLogic.UpdateShipPosition(position, input, deltaTime)
+			playerState.Position = new_state
+			playerState.Timestamp = time.Now().Unix()
+		}
+		// Broadcast updated state to all subscribed players
+		for _, subStream := range game.SubscribedInputStreams {
+			err := subStream.Send(game.states)
+			if err != nil {
+				log.Printf("Error sending state to player: %v", err)
+			}
+		}
+		s.games[gameCode] = game
+		s.mu.Unlock()
+	}
+}
 
 
 
 
 func (s *server) JoinInputUpdates(stream proto.GameService_JoinInputUpdatesServer) error {
-	
 	md,ok := metadata.FromIncomingContext(stream.Context())
 	if !ok {
 		return fmt.Errorf("metadata not found")
 	}
-	
 	gameCode := md.Get("game_code")
 	playerUuid := md.Get("player_uuid")
-	
 	if len(playerUuid) == 0 {
 		return fmt.Errorf("player uuid not found")
 	}
-
 	if len(gameCode) == 0 {
 		return fmt.Errorf("game code not found")
 	}
-
-
 	gameCodeStr := gameCode[0]
 	playerUuidStr := playerUuid[0]
-
 	log.Printf("Player UUID: %s, Game Code: %s", playerUuidStr, gameCodeStr)
-
-
+	// Subscribe the player to input updates
 	s.mu.Lock()
 	game, exists := s.games[gameCodeStr]
-
 	if !exists {
 		s.mu.Unlock()
 		log.Printf("Partida no encontrada: %s", gameCodeStr)
 		return fmt.Errorf("partida no encontrada")
 	}
-
-	// Check if the player is already subscribed
 	if _, exists := game.SubscribedInputStreams[playerUuidStr]; exists {
 		s.mu.Unlock()
 		log.Printf("Player already subscribed: %s", playerUuidStr)
 		return fmt.Errorf("player already subscribed")
 	}
-
-	// Subscribe the player to input updates
 	game.SubscribedInputStreams[playerUuidStr] = stream
+	s.games[gameCodeStr] = game
 	s.mu.Unlock()
 	log.Printf("Player subscribed to input updates: %s", playerUuidStr)
-
+	// Only store latest input per player
 	for {
-        in, err := stream.Recv()
-        if err != nil {
-            return err
-        }
-        log.Printf("Received: %v", in)
-        // Echo back the input to all subscribed players
-        for _, subStream := range game.SubscribedInputStreams {
-			err := subStream.Send(in)
-			if err != nil {
-				log.Printf("Error sending input to player: %v", err)
-			}
+		in, err := stream.Recv()
+		if err != nil {
+			return err
 		}
-    }
+		s.mu.Lock()
+		game, exists := s.games[gameCodeStr]
+		if exists {
+			game.LatestInputs[in.PlayerUuid] = in.Input
+			s.games[gameCodeStr] = game
+		}
+		s.mu.Unlock()
+	}
 }
-
-
 
 
 func main() {

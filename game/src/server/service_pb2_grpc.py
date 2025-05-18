@@ -47,7 +47,7 @@ class GameServiceStub(object):
         self.JoinInputUpdates = channel.stream_stream(
                 '/server.GameService/JoinInputUpdates',
                 request_serializer=service__pb2.PlayerState.SerializeToString,
-                response_deserializer=service__pb2.PlayerState.FromString,
+                response_deserializer=service__pb2.GameState.FromString,
                 _registered_method=True)
         self.StartGame = channel.unary_unary(
                 '/server.GameService/StartGame',
@@ -99,7 +99,7 @@ def add_GameServiceServicer_to_server(servicer, server):
             'JoinInputUpdates': grpc.stream_stream_rpc_method_handler(
                     servicer.JoinInputUpdates,
                     request_deserializer=service__pb2.PlayerState.FromString,
-                    response_serializer=service__pb2.PlayerState.SerializeToString,
+                    response_serializer=service__pb2.GameState.SerializeToString,
             ),
             'StartGame': grpc.unary_unary_rpc_method_handler(
                     servicer.StartGame,
@@ -187,7 +187,7 @@ class GameService(object):
             target,
             '/server.GameService/JoinInputUpdates',
             service__pb2.PlayerState.SerializeToString,
-            service__pb2.PlayerState.FromString,
+            service__pb2.GameState.FromString,
             options,
             channel_credentials,
             insecure,
