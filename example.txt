@@ -1,0 +1,7 @@
+user -> "i want to join the updates channel, id and code"
+server <- stores user in a list, sends a stream and periodicly sends data
+
+user -> input
+server <- receives input, searches if there is more inputs at the same time, and sorts them by the timestamp. Stores them in the queue
+
+server -> sends the queue.

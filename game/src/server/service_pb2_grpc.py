@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import service_pb2 as service__pb2
+from . import service_pb2 as service__pb2
 
 GRPC_GENERATED_VERSION = '1.71.0'
 GRPC_VERSION = grpc.__version__
@@ -34,25 +34,36 @@ class GameServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.CreateGame = channel.unary_unary(
+                '/server.GameService/CreateGame',
+                request_serializer=service__pb2.Empty.SerializeToString,
+                response_deserializer=service__pb2.GameCode.FromString,
+                _registered_method=True)
         self.JoinGame = channel.unary_stream(
                 '/server.GameService/JoinGame',
                 request_serializer=service__pb2.PlayerData.SerializeToString,
-                response_deserializer=service__pb2.PlayerData.FromString,
+                response_deserializer=service__pb2.GameData.FromString,
                 _registered_method=True)
-        self.SendState = channel.unary_unary(
-                '/server.GameService/SendState',
+        self.JoinInputUpdates = channel.stream_stream(
+                '/server.GameService/JoinInputUpdates',
                 request_serializer=service__pb2.PlayerState.SerializeToString,
                 response_deserializer=service__pb2.GameState.FromString,
                 _registered_method=True)
-        self.GetGameState = channel.unary_unary(
-                '/server.GameService/GetGameState',
-                request_serializer=service__pb2.Empty.SerializeToString,
-                response_deserializer=service__pb2.GameState.FromString,
+        self.StartGame = channel.unary_unary(
+                '/server.GameService/StartGame',
+                request_serializer=service__pb2.GameCode.SerializeToString,
+                response_deserializer=service__pb2.BoolMessage.FromString,
                 _registered_method=True)
 
 
 class GameServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def CreateGame(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def JoinGame(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -60,13 +71,13 @@ class GameServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SendState(self, request, context):
+    def JoinInputUpdates(self, request_iterator, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetGameState(self, request, context):
+    def StartGame(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -75,20 +86,25 @@ class GameServiceServicer(object):
 
 def add_GameServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'CreateGame': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateGame,
+                    request_deserializer=service__pb2.Empty.FromString,
+                    response_serializer=service__pb2.GameCode.SerializeToString,
+            ),
             'JoinGame': grpc.unary_stream_rpc_method_handler(
                     servicer.JoinGame,
                     request_deserializer=service__pb2.PlayerData.FromString,
-                    response_serializer=service__pb2.PlayerData.SerializeToString,
+                    response_serializer=service__pb2.GameData.SerializeToString,
             ),
-            'SendState': grpc.unary_unary_rpc_method_handler(
-                    servicer.SendState,
+            'JoinInputUpdates': grpc.stream_stream_rpc_method_handler(
+                    servicer.JoinInputUpdates,
                     request_deserializer=service__pb2.PlayerState.FromString,
                     response_serializer=service__pb2.GameState.SerializeToString,
             ),
-            'GetGameState': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetGameState,
-                    request_deserializer=service__pb2.Empty.FromString,
-                    response_serializer=service__pb2.GameState.SerializeToString,
+            'StartGame': grpc.unary_unary_rpc_method_handler(
+                    servicer.StartGame,
+                    request_deserializer=service__pb2.GameCode.FromString,
+                    response_serializer=service__pb2.BoolMessage.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -100,6 +116,33 @@ def add_GameServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class GameService(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def CreateGame(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/server.GameService/CreateGame',
+            service__pb2.Empty.SerializeToString,
+            service__pb2.GameCode.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
     @staticmethod
     def JoinGame(request,
@@ -117,7 +160,7 @@ class GameService(object):
             target,
             '/server.GameService/JoinGame',
             service__pb2.PlayerData.SerializeToString,
-            service__pb2.PlayerData.FromString,
+            service__pb2.GameData.FromString,
             options,
             channel_credentials,
             insecure,
@@ -129,7 +172,7 @@ class GameService(object):
             _registered_method=True)
 
     @staticmethod
-    def SendState(request,
+    def JoinInputUpdates(request_iterator,
             target,
             options=(),
             channel_credentials=None,
@@ -139,10 +182,10 @@ class GameService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
+        return grpc.experimental.stream_stream(
+            request_iterator,
             target,
-            '/server.GameService/SendState',
+            '/server.GameService/JoinInputUpdates',
             service__pb2.PlayerState.SerializeToString,
             service__pb2.GameState.FromString,
             options,
@@ -156,7 +199,7 @@ class GameService(object):
             _registered_method=True)
 
     @staticmethod
-    def GetGameState(request,
+    def StartGame(request,
             target,
             options=(),
             channel_credentials=None,
@@ -169,9 +212,9 @@ class GameService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/server.GameService/GetGameState',
-            service__pb2.Empty.SerializeToString,
-            service__pb2.GameState.FromString,
+            '/server.GameService/StartGame',
+            service__pb2.GameCode.SerializeToString,
+            service__pb2.BoolMessage.FromString,
             options,
             channel_credentials,
             insecure,

@@ -22,7 +22,14 @@ BLACK = (0, 0, 0)  # RGB color for black
 RED = (255, 0, 0)  # RGB color for red
 GREEN = (0, 255, 0)  # RGB color for green
 BLUE = (0, 0, 255)  # RGB color for blue
+YELLOW = (255, 255, 0)  # RGB color for yellow
 
+color_map = {
+    "green": GREEN,
+    "red": RED,
+    "blue": BLUE,
+    "yellow": YELLOW
+}
 
 # Ship constants 
 SHIP_BASE_SPEED = 80  # Base speed of the ship in units per second
@@ -31,6 +38,7 @@ SHIP_DEACCELERATION_RATE = 40
 SHIP_BASE_TURN_RATE = 1.2  # Base turn rate of the ship in radians per second
 SHIP_BASE_TURN_ACCELERATION = 1.2  # Base turn acceleration of the ship in radians per second
 SHIP_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "ship.png")  # Default sprite for the ship
+SHIP_LIVES = 3  # Number of lives for the ship
 
 # Shot constants
 SHOT_BASE_SPEED = 300  # Base speed of the shot in units per second
