@@ -1,6 +1,3 @@
-
-
-
 import threading
 import pygame
 from entities.ship import Ship
@@ -57,6 +54,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
     messages = []
     powerups = []
     released_asteroids = []
+    nuke_spawned = False
 
     #!!!!!!!!!!
     MIN_ASTEROIDS = 10
@@ -122,6 +120,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
     running = True
 
+    nuke_cooldown = 0  # Tiempo restante para volver a spawnear asteroides tras la nuke
 
     while running:
         for event in pygame.event.get():
@@ -129,6 +128,12 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                 running = False
 
         delta_time = clock.tick(stt.GAME_FPS) / 1000.0  # Convert milliseconds to seconds
+
+        # Actualizar cooldown de la nuke
+        if nuke_cooldown > 0:
+            nuke_cooldown -= delta_time
+            if nuke_cooldown < 0:
+                nuke_cooldown = 0
 
         if check_collisions(ship1, asteroids, released_asteroids):
             if ship1.lives <= 0:
@@ -138,13 +143,14 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
         # Manejar colisiones entre balas y asteroides
         for ship in ships:
-            points, destroyed_count = handle_bullet_asteroid_collisions(ship.bullets, asteroids, messages, powerups, released_asteroids)
+            points, destroyed_count = handle_bullet_asteroid_collisions(ship.bullets, asteroids, messages, powerups, released_asteroids,nuke_spawned)
             score += points  # Sumar los puntos obtenidos al puntaje total
             level.update(destroyed_count, asteroids)  # Actualizar el progreso del nivel
 
-        # Generar nuevos asteroides si el número es menor al mínimo
-        while len(asteroids) < level.min_asteroids:
-            asteroids.append(Asteroid(len(asteroids), difficulty_factor=level.difficulty_factor))
+        # Generar nuevos asteroides si el número es menor al mínimo y no está en cooldown de nuke
+        if nuke_cooldown == 0:
+            while len(asteroids) < level.min_asteroids:
+                asteroids.append(Asteroid(len(asteroids), difficulty_factor=level.difficulty_factor))
 
 
         # Limpiar la pantalla
@@ -157,19 +163,31 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
         # Dibujar mensajes temporales
         for message in messages[:]:
+            if "text" in message:
+                draw_text(screen, message["text"], message["pos"], (255, 255, 255), opacity=int(message["opacity"]))
+            elif "icon" in message:
+                icon_img = pygame.image.load(message["icon"])
+                icon_img = pygame.transform.scale(icon_img, (48, 48))
+                icon_img.set_alpha(int(message["opacity"]))
+                icon_rect = icon_img.get_rect(center=message["pos"])
+                screen.blit(icon_img, icon_rect)
+
             message["timer"] -= delta_time
             message["pos"][1] -= 50 * delta_time
             message["opacity"] -= 85 * delta_time
 
             if message["timer"] <= 0 or message["opacity"] <= 0:
                 messages.remove(message)
-            else:
-                draw_text(screen, message["text"], message["pos"], (255, 255, 255), opacity=int(message["opacity"]))
 
         for powerup in powerups[:]:
             powerup.draw(screen)
             powerup.update(delta_time)
             if check_powerup_collisions(ship1, powerup):  # Detectar si la nave recoge el potenciador
+                if powerup.power_type == "nuke":
+                    asteroids.clear()   # Eliminar todos los asteroides
+                    released_asteroids.clear()  # Eliminar todos los asteroides liberados
+                    nuke_cooldown = 5.0
+                    nuke_spawned = True  # 5 segundos sin spawnear
                 apply_powerup_effect(ship1, powerup.power_type, messages)  # Pasar la lista de mensajes
                 powerups.remove(powerup)
 

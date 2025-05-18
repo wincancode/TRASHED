@@ -3,6 +3,7 @@ import pygame
 from entities.entity import Entity
 import settings as stt
 import math
+from random import choice, randint
 
 class Asteroid(Entity):
     def __init__(self, id, difficulty_factor=1):
@@ -10,10 +11,22 @@ class Asteroid(Entity):
         self.set_sprite(pygame.image.load(stt.ASTEROID_DEFAULT_SPRITE))
         base_size = random.randint(20, 50)
         self.set_dimensions(base_size + (difficulty_factor * 5), base_size + (difficulty_factor * 5))
-        self.set_pos(
-            random.randint(0, stt.GAME_WIDTH),
-            random.randint(0, stt.GAME_HEIGHT)
-        )
+        
+        # Spawnear en el borde de la pantalla (en cualquier punto de la línea del borde)
+        border = choice(['top', 'bottom', 'left', 'right'])
+        if border == 'top':
+            self.posX = randint(0, stt.GAME_WIDTH)
+            self.posY = 0
+        elif border == 'bottom':
+            self.posX = randint(0, stt.GAME_WIDTH)
+            self.posY = stt.GAME_HEIGHT
+        elif border == 'left':
+            self.posX = 0
+            self.posY = randint(0, stt.GAME_HEIGHT)
+        else:  # right
+            self.posX = stt.GAME_WIDTH
+            self.posY = randint(0, stt.GAME_HEIGHT)
+        
         self.set_speed(random.uniform(50, 150))
         self.set_angle(random.uniform(0, 360))
         self.set_active(True)
@@ -33,9 +46,20 @@ class Asteroid(Entity):
             self.respawn()
     
     def respawn(self):
-        self.set_pos(
-            random.choice([-50, stt.GAME_WIDTH + 50]), random.randint(-50, stt.GAME_HEIGHT + 50)
-        )
+        border = choice(['top', 'bottom', 'left', 'right'])
+        if border == 'top':
+            self.posX = randint(0, stt.GAME_WIDTH)
+            self.posY = 0
+        elif border == 'bottom':
+            self.posX = randint(0, stt.GAME_WIDTH)
+            self.posY = stt.GAME_HEIGHT
+        elif border == 'left':
+            self.posX = 0
+            self.posY = randint(0, stt.GAME_HEIGHT)
+        else:  # right
+            self.posX = stt.GAME_WIDTH
+            self.posY = randint(0, stt.GAME_HEIGHT)
+        
         self.set_angle(random.uniform(0, 360))
 
     def draw_health(self, screen):

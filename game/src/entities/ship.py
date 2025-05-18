@@ -24,6 +24,7 @@ class Ship(Entity):
         self.space_pressed = False
         self.lives = 3
         self.laser_boost_level = 0
+        self.turbina_boost_level = 0
         self.shield_charges = 0  # Número de cargas del escudo
         self.shield_active = False  # Indica si el escudo está activo
         self.bullets = []
