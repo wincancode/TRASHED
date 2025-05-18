@@ -64,7 +64,6 @@ func HandleBulletAsteroidCollisions(bullets *[]Bullet, asteroids *[]Asteroid, me
 
 					// Generar un power-up con probabilidad del 50%
 					if rand.Float64() < 0.5 {
-						powerType := []string{"laser_boost", "shield"}[rand.Intn(2)]
 						*powerups = append(*powerups, GenerateRandomPowerUp(asteroid.PosX, asteroid.PosY))
 					}
 				}

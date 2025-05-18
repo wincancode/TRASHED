@@ -56,6 +56,34 @@ def show_tutorial_screen(screen):
                 running = False
                 break
 
+def show_controls_tutorial_screen(screen):
+    controls = [
+        ("W", "Acelerar hacia adelante"),
+        ("S", "Frenar/desacelerar"),
+        ("A", "Girar a la izquierda"),
+        ("D", "Girar a la derecha"),
+        ("ESPACIO", "Disparar"),
+        ("ESC", "Salir o volver al menú"),
+    ]
+    running = True
+    while running:
+        screen.fill((30, 30, 30))
+        draw_text(screen, "TUTORIAL DE CONTROLES", (screen.get_width()//2, 40), (0,255,255), font_size=40, center=True)
+        y = 120
+        for key, desc in controls:
+            draw_text(screen, f"{key}", (120, y), (255,255,255), font_size=32)
+            draw_text(screen, desc, (220, y), (200,200,200), font_size=28)
+            y += 60
+        draw_text(screen, "Presiona ESC para volver", (screen.get_width()//2, y+40), (255,255,255), font_size=28, center=True)
+        pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+                break
+
 if Mostrar_inicio:
     while True:
         start_option = show_start_screen()
@@ -69,6 +97,7 @@ if Mostrar_inicio:
                 continue  # Volver al menú principal
         elif start_option == "tutorial":
             show_tutorial_screen(screen)
+            show_controls_tutorial_screen(screen)
             continue
         break
 
