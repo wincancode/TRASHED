@@ -43,7 +43,11 @@ SHIP_LIVES = 3  # Number of lives for the ship
 # Shot constants
 SHOT_BASE_SPEED = 300  # Base speed of the shot in units per second
 SHOT_BASE_DAMAGE = 1  # Base damage of the shot
-SHOT_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shot.png")  # D  # Default sprite for the shot
+SHOT_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot1.png")  
+SHOT_LASER_1_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot2.png") 
+SHOT_LASER_2_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot3.png")
+SHOT_LASER_3_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot4.png")
+SHOT_LASER_4_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot5.png")
 
 # Ship sprite dimensions
 SHIP_WIDTH = 30  # Width of the ship in pixels

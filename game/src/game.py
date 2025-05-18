@@ -94,26 +94,26 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         pygame.K_SPACE: "is_shoot",
     }
 
-    def getInputs(deltaTime) -> None:
-        keys = pygame.key.get_pressed()
-        actions = {}
+    #def getInputs(deltaTime) -> None:
+    #    keys = pygame.key.get_pressed()
+    #    actions = {}
+#
+    #    for key, action in key_action_map.items():
+    #        actions[action] = keys[key]
+    #    
+    #    print(f"Acciones del jugador local: {actions}")
+    #    
+    #    # Actualizar la entrada del jugador local
+    #    nonlocal local_player_inputs
+    #    
+    #    with lock:
+    #        local_player_inputs = actions
 
-        for key, action in key_action_map.items():
-            actions[action] = keys[key]
-        
-        print(f"Acciones del jugador local: {actions}")
-        
-        # Actualizar la entrada del jugador local
-        nonlocal local_player_inputs
-        
-        with lock:
-            local_player_inputs = actions
 
-
-    # def getInputs(deltaTime):
-    #     keys = pygame.key.get_pressed()
-    #     ship1.control(keys)
-    #     ship1.updatePosition(deltaTime)
+    def getInputs(deltaTime):
+         keys = pygame.key.get_pressed()
+         ship1.control(keys)
+         ship1.updatePosition(deltaTime)
 
     score = 0
 
