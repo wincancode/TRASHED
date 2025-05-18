@@ -65,17 +65,6 @@ def request_start_game(game_code):
             return False
 
 
-def generate_player_states(player_uuid):
-    for i in range(1000000000000000000000000):
-        yield service_pb2.PlayerState(
-            code="GAME123",
-            player=service_pb2.PlayerData(player_uuid=player_uuid, username=f"user"),
-            timestamp=123456789 + i,
-            input=service_pb2.Input(move=True)
-        )
-
-        # Simulate some delay
-        time.sleep(1)
 
 def join_input_updates(code, player_uuid, obtain_input_callback,player_input_iterator):
     channel = grpc.insecure_channel(DIRECTION)

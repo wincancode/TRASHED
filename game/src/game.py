@@ -1,20 +1,17 @@
 import threading
+import time
 import pygame
 from entities.ship import Ship
 from entities.asteroid import Asteroid
 from entities.powerup import apply_powerup_effect
 from collision import check_collisions, handle_bullet_asteroid_collisions, check_powerup_collisions
 from connectivity import join_input_updates
+import server.service_pb2 as service_pb2
 from menu import show_game_over_screen
 import settings as stt
 from level import Level
 from ui import draw_text, draw_progress_bar
 
-
-def deencrypt_input(movement):
-    # Aquí puedes implementar la lógica para desencriptar el game_code
-    # Por ahora, simplemente lo devolvemos sin cambios
-    return game_code
 
 
 
@@ -33,19 +30,6 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         if ship.id == user_uuid:
             ship1 = ship
             break
-    
-    def obtain_inputs_callback(inputs):
-       print(f"Inputs recibidos: {inputs}")
-        # for ship in ships:
-        #     if ship.id == inputs.player_uuid:
-        #         ship.update_inputs(inputs)
-        #         break
-
-    
-
-
-    Input_updates_thread = threading.Thread(target=join_input_updates, args=(game_code,user_uuid,obtain_inputs_callback))
-    Input_updates_thread.start()
 
     
     clock = pygame.time.Clock()
@@ -64,25 +48,56 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         asteroids.append(Asteroid(i))
 
 
-    
-
-    def local_player_input_iterator():
-        while True:
-            with lock:
-                nonlocal local_player_inputs
-                yield local_player_inputs
-
-    local_player_input_thread = threading.Thread(target=local_player_input_iterator)
-    local_player_input_thread.start()
-
-    local_player_inputs =         {
+    local_player_inputs =    {
             "move": False,
             "stride_left": False,
             "stride_right": False,
             "stop": False,
             "is_shoot": False
         }
-    
+
+        
+    def obtain_inputs_callback(inputs):
+        
+        keys = {}
+
+        keys["move"] = inputs.input.move
+        keys["stride_left"] = inputs.input.stride_left
+        keys["stride_right"] = inputs.input.stride_right
+        keys["stop"] = inputs.input.stop
+        keys["is_shoot"] = inputs.input.is_shoot
+
+        with lock:
+            nonlocal ships
+            for ship in ships:   
+                if ship.id == inputs.player.player_uuid:
+                    ship.control(keys)
+                
+
+    def local_player_input_iterator():
+        while True:
+            with lock:
+                nonlocal local_player_inputs                
+                yield service_pb2.PlayerState(
+                code=game_code,
+                player=service_pb2.PlayerData(player_uuid=user_uuid), 
+                timestamp=int(pygame.time.get_ticks()),
+                input=service_pb2.Input(
+                    move=local_player_inputs["move"],
+                    stride_left=local_player_inputs["stride_left"],
+                    stride_right=local_player_inputs["stride_right"],
+                    stop=local_player_inputs["stop"],
+                    is_shoot=local_player_inputs["is_shoot"]
+                    )
+                )
+            time.sleep(0.01)  # Delay to control the rate of sending inputs
+
+    Input_updates_thread = threading.Thread(
+        target=join_input_updates,
+        args=(game_code,user_uuid,obtain_inputs_callback,local_player_input_iterator)
+    )
+    Input_updates_thread.start()
+
 
     key_action_map = {
         pygame.K_w: "move",
@@ -92,20 +107,19 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         pygame.K_SPACE: "is_shoot",
     }
 
-    #def getInputs(deltaTime) -> None:
-    #    keys = pygame.key.get_pressed()
-    #    actions = {}
-#
-    #    for key, action in key_action_map.items():
-    #        actions[action] = keys[key]
-    #    
-    #    print(f"Acciones del jugador local: {actions}")
-    #    
-    #    # Actualizar la entrada del jugador local
-    #    nonlocal local_player_inputs
-    #    
-    #    with lock:
-    #        local_player_inputs = actions
+
+    def getInputs(deltaTime) -> None:
+        keys = pygame.key.get_pressed()
+        actions = {}
+
+        for key, action in key_action_map.items():
+            actions[action] = keys[key]
+
+        # Actualizar la entrada del jugador local
+        nonlocal local_player_inputs
+        
+        with lock:
+            local_player_inputs = actions
 
 
     def getInputs(deltaTime):
@@ -203,9 +217,13 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             draw_text(screen, "¡Subiste de Nivel!", (screen_width // 2, screen_height // 2), (255, 255, 0), font_size=50, center=True)
 
         # Dibujar la nave
-        getInputs(delta_time)
+        if pygame.key.get_focused():
+            getInputs(delta_time)
+
         for ship in ships:
             ship.draw(screen,delta_time)
+            ship.updatePosition(delta_time)  # Update the ship's position with a small delta time
+
 
         # Mostrar la puntuación acumulada
         draw_text(screen, f"Puntos: {score}", (10, 10), (255, 255, 255))

@@ -27,8 +27,15 @@ message PlayerState{
     string code = 1;
     PlayerData player = 2;
     int64 timestamp = 3;    //For sync
-    Input input = 4;
+    Position position = 4;
+    Input input = 5;
 }
+
+message Position{
+    float x = 1;
+    float y = 2;
+}
+
 
 message Input{
     bool move = 1;
@@ -55,7 +62,7 @@ message PlayerData{
 
 message GameData {
   string code = 1;                     // Unique game code
-  repeated PlayerData players = 2;     // List of players in the game
+  repeated PlayerState players = 2;     // List of players in the game
   bool started = 4;
 }
 
