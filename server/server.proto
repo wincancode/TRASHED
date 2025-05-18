@@ -29,6 +29,7 @@ message PlayerState{
     int64 timestamp = 3;    //For sync
     Input input = 5;
     Position position = 6;
+    int32 health = 7;
 }
 
 message Position{

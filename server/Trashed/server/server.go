@@ -226,6 +226,13 @@ func (s *server) runGameLoop(gameCode string) {
 		//instantiate bullets 
 		for playerID, ship := range game.Ships {
 			input := game.LatestInputs[playerID]
+
+
+			//ceck if the ship is alive, and ignore if not
+			if ship.Lives <= 0 {
+				continue
+			}
+
 			if input == nil {
 				input = &proto.Input{}
 			}
@@ -326,6 +333,12 @@ func (s *server) runGameLoop(gameCode string) {
 		// Update all ships
 		for playerID, ship := range game.Ships {
 			input := game.LatestInputs[playerID]
+
+			//ceck if the ship is alive, and ignore if not
+			if ship.Lives <= 0 {
+				continue
+			}
+
 			if input == nil {
 				input = &proto.Input{}
 			}
@@ -394,6 +407,7 @@ func ShipStateToProto(playerUuid string, ship *gameLogic.ShipState, code string)
 			AccelerationX: 0, // You can add this if you store it in ShipState
 			AccelerationY: 0,
 		},
+		Health: int32(ship.Lives),
 	}
 }
 

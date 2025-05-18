@@ -18,6 +18,7 @@ type ShipState struct {
 	ShieldCharges   int
 	Lives           int
 	LastShotTime    time.Time
+	
 }
 
 // MovementInput represents the input for a ship's movement.

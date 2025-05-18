@@ -28,6 +28,11 @@ class Ship(Entity):
         self.shield_active = False  # Indica si el escudo está activo
         self.bullets = []
 
+
+    def set_health(self, lives):
+        """Establece la vida de la nave."""
+        self.lives = lives
+
     
     def lose_life(self):
         """Reduce la vida de la nave en 1."""
@@ -104,6 +109,9 @@ class Ship(Entity):
         if state is None or not hasattr(state, "position") or state.position is None:
             return
 
+        if hasattr(state,"health") and state.health is not None:
+            self.set_health(state.health)
+
         pos = state.position
         if getattr(pos, "x", None) is not None and getattr(pos, "y", None) is not None:
             self.set_pos(pos.x, pos.y)
@@ -119,3 +127,4 @@ class Ship(Entity):
             self.accelerationY = pos.accelerationY
         if hasattr(pos, "speed",) and pos.speed is not None:
             self.set_speed(pos.speed)
+        

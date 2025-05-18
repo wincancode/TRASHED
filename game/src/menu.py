@@ -272,7 +272,8 @@ def show_game_over_screen(screen, screen_width, screen_height):
     screen.fill(stt.BLACK)
     screen.blit(text, text_rect)
     pygame.display.flip()
-    pygame.time.wait(3000)  # Wait for 3 seconds
+    pygame.time.wait(6000)  # Wait for 3 seconds
+    return "back"  # Return to the main menu
 
 def show_player_data_screen():
     font = pygame.font.Font(None, 50)

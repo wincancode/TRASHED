@@ -58,6 +58,8 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             for ship in ships:
                 ship_state = state.playerStates[ship.id]
                 ship.setState(ship_state)
+                if ship.id == user_uuid:
+                    ship1.set_health(ship_state.health)
 
             # Update asteroids from server state (with interpolation)
             asteroid_ids = set()
@@ -294,9 +296,20 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             getInputs(delta_time)
 
         for ship in ships:
+            #not render dead ships
+            if ship.lives <= 0:
+                continue
+
             ship.draw(screen,delta_time)
             ship.updatePosition(delta_time)  # Update the ship's position with a small delta time
 
+        #check if game ended 
+        if all(ship.lives <= 0 for ship in ships):
+            show_game_over_screen(screen, screen_width, screen_height)
+            running = False
+            break
+        
+            
 
         # Mostrar la puntuación acumulada
         draw_text(screen, f"Puntos: {level.score}", (10, 10), (255, 255, 255))
@@ -318,6 +331,10 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             bg_color=(50, 50, 50)  # Color de fondo (gris oscuro)
         )
 
+
+        
+
         # Actualizar la pantalla
         pygame.display.flip()
-
+    
+    return "back"

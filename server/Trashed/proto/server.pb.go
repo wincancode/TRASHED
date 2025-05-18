@@ -116,6 +116,7 @@ type PlayerState struct {
 	Timestamp     int64                  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"` //For sync
 	Input         *Input                 `protobuf:"bytes,5,opt,name=input,proto3" json:"input,omitempty"`
 	Position      *Position              `protobuf:"bytes,6,opt,name=position,proto3" json:"position,omitempty"`
+	Health        int32                  `protobuf:"varint,7,opt,name=health,proto3" json:"health,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -183,6 +184,13 @@ func (x *PlayerState) GetPosition() *Position {
 		return x.Position
 	}
 	return nil
+}
+
+func (x *PlayerState) GetHealth() int32 {
+	if x != nil {
+		return x.Health
+	}
+	return 0
 }
 
 type Position struct {
@@ -1033,14 +1041,15 @@ const file_server_proto_rawDesc = "" +
 	"\vBoolMessage\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\bR\x05value\"\x1e\n" +
 	"\bGameCode\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"\xb3\x01\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\"\xcb\x01\n" +
 	"\vPlayerState\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x1f\n" +
 	"\vplayer_uuid\x18\x02 \x01(\tR\n" +
 	"playerUuid\x12\x1c\n" +
 	"\ttimestamp\x18\x03 \x01(\x03R\ttimestamp\x12#\n" +
 	"\x05input\x18\x05 \x01(\v2\r.server.InputR\x05input\x12,\n" +
-	"\bposition\x18\x06 \x01(\v2\x10.server.PositionR\bposition\"\xb8\x01\n" +
+	"\bposition\x18\x06 \x01(\v2\x10.server.PositionR\bposition\x12\x16\n" +
+	"\x06health\x18\a \x01(\x05R\x06health\"\xb8\x01\n" +
 	"\bPosition\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x01R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x01R\x01y\x12\x14\n" +
