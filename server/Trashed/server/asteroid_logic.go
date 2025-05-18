@@ -41,35 +41,3 @@ func UpdateAsteroidPosition(asteroid *Asteroid, deltaTime float64) {
 	asteroid.PosX += asteroid.Speed * math.Cos(asteroid.Angle*math.Pi/180) * deltaTime
 	asteroid.PosY += asteroid.Speed * math.Sin(asteroid.Angle*math.Pi/180) * deltaTime
 }
-
-// CheckCollision verifica si un asteroide colisiona con una nave
-func CheckCollision(ship *ShipState, asteroid *Asteroid) bool {
-	shipLeft := ship.PosX - 25 // Asumiendo un ancho fijo de 50 para la nave
-	shipRight := ship.PosX + 25
-	shipTop := ship.PosY - 25 // Asumiendo un alto fijo de 50 para la nave
-	shipBottom := ship.PosY + 25
-
-	asteroidLeft := asteroid.PosX - float64(asteroid.Width)/2
-	asteroidRight := asteroid.PosX + float64(asteroid.Width)/2
-	asteroidTop := asteroid.PosY - float64(asteroid.Height)/2
-	asteroidBottom := asteroid.PosY + float64(asteroid.Height)/2
-
-	return !(shipRight < asteroidLeft || shipLeft > asteroidRight || shipBottom < asteroidTop || shipTop > asteroidBottom)
-}
-
-// ReleaseAsteroids genera asteroides alrededor de una nave
-func ReleaseAsteroids(ship *ShipState, count int) []Asteroid {
-	asteroids := []Asteroid{}
-	safeRadius := 50.0
-	for i := 0; i < count; i++ {
-		angle := float64(i) * (360.0 / float64(count))
-		asteroid := InitializeAsteroid(-1, 0)
-		asteroid.PosX = ship.PosX + safeRadius*math.Cos(angle*math.Pi/180)
-		asteroid.PosY = ship.PosY + safeRadius*math.Sin(angle*math.Pi/180)
-		asteroid.Speed = 200
-		asteroid.Health = 1
-		asteroid.MaxHealth = 1
-		asteroids = append(asteroids, asteroid)
-	}
-	return asteroids
-}

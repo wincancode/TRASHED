@@ -15,6 +15,7 @@ type ShipState struct {
 	LaserBoostLevel int
 	ShieldActive    bool
 	ShieldCharges   int
+	Lives           int
 }
 
 // MovementInput represents the input for a ship's movement.

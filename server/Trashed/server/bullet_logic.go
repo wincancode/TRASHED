@@ -58,37 +58,3 @@ func CheckBulletAsteroidCollision(bullet *Bullet, asteroid *Asteroid) bool {
 
 	return !(bulletRight < asteroidLeft || bulletLeft > asteroidRight || bulletBottom < asteroidTop || bulletTop > asteroidBottom)
 }
-
-// HandleBulletAsteroidCollisions maneja las colisiones entre balas y asteroides
-func HandleBulletAsteroidCollisions(bullets *[]Bullet, asteroids *[]Asteroid) (int, int) {
-	totalPoints := 0
-	destroyedCount := 0
-
-	for i := 0; i < len(*bullets); i++ {
-		bullet := &(*bullets)[i]
-		if !bullet.Active {
-			continue
-		}
-
-		for j := 0; j < len(*asteroids); j++ {
-			asteroid := &(*asteroids)[j]
-			if CheckBulletAsteroidCollision(bullet, asteroid) {
-				bullet.Active = false
-				asteroid.Health -= bullet.Damage
-
-				if asteroid.Health <= 0 {
-					// Eliminar el asteroide
-					*asteroids = append((*asteroids)[:j], (*asteroids)[j+1:]...)
-					destroyedCount++
-
-					// Calcular puntos según el tamaño del asteroide
-					points := asteroid.Width
-					totalPoints += points
-				}
-				break
-			}
-		}
-	}
-
-	return totalPoints, destroyedCount
-}
