@@ -564,6 +564,7 @@ type BulletState struct {
 	Damage        int32                  `protobuf:"varint,7,opt,name=damage,proto3" json:"damage,omitempty"`
 	Width         int32                  `protobuf:"varint,8,opt,name=width,proto3" json:"width,omitempty"`
 	Height        int32                  `protobuf:"varint,9,opt,name=height,proto3" json:"height,omitempty"`
+	Owneruuid     string                 `protobuf:"bytes,10,opt,name=owneruuid,proto3" json:"owneruuid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -659,6 +660,13 @@ func (x *BulletState) GetHeight() int32 {
 		return x.Height
 	}
 	return 0
+}
+
+func (x *BulletState) GetOwneruuid() string {
+	if x != nil {
+		return x.Owneruuid
+	}
+	return ""
 }
 
 type PowerUpState struct {
@@ -1068,7 +1076,7 @@ const file_server_proto_rawDesc = "" +
 	"\x05angle\x18\a \x01(\x01R\x05angle\x12\x16\n" +
 	"\x06health\x18\b \x01(\x05R\x06health\x12\x1d\n" +
 	"\n" +
-	"max_health\x18\t \x01(\x05R\tmaxHealth\"\xc3\x01\n" +
+	"max_health\x18\t \x01(\x05R\tmaxHealth\"\xe1\x01\n" +
 	"\vBulletState\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\f\n" +
 	"\x01x\x18\x02 \x01(\x01R\x01x\x12\f\n" +
@@ -1078,7 +1086,9 @@ const file_server_proto_rawDesc = "" +
 	"\x06active\x18\x06 \x01(\bR\x06active\x12\x16\n" +
 	"\x06damage\x18\a \x01(\x05R\x06damage\x12\x14\n" +
 	"\x05width\x18\b \x01(\x05R\x05width\x12\x16\n" +
-	"\x06height\x18\t \x01(\x05R\x06height\"\x94\x01\n" +
+	"\x06height\x18\t \x01(\x05R\x06height\x12\x1c\n" +
+	"\towneruuid\x18\n" +
+	" \x01(\tR\towneruuid\"\x94\x01\n" +
 	"\fPowerUpState\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\f\n" +
 	"\x01x\x18\x02 \x01(\x01R\x01x\x12\f\n" +

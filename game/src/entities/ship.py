@@ -86,8 +86,8 @@ class Ship(Entity):
         # Dibujar las balas
         for bullet in self.bullets[:]:
             bullet.Update(delta_time, screen)
-            if not bullet.active:
-                self.bullets.remove(bullet)
+            # if not bullet.active:
+            #     self.bullets.remove(bullet)
 
         # Dibujar el escudo si está activo
         if self.shield_active:

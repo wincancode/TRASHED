@@ -35,59 +35,69 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
     clock = pygame.time.Clock()
 
     asteroids = []
+    asteroid_map = {}  # id -> asteroid for interpolation
     messages = []
     powerups = []
     released_asteroids = []
+    last_server_update = time.time()
+    local_player_inputs = {
+        "move": False,
+        "stride_left": False,
+        "stride_right": False,
+        "stop": False,
+        "is_shoot": False
+    }
 
+    INTERPOLATION_DELAY = 1.0 / 60  # Adjust to your server tick rate
 
-    local_player_inputs =    {
-            "move": False,
-            "stride_left": False,
-            "stride_right": False,
-            "stop": False,
-            "is_shoot": False
-        }
-
-        
     def obtain_game_state_callback(state):
+        nonlocal last_server_update
         with lock:
             # Update ships
             for ship in ships:
                 ship_state = state.playerStates[ship.id]
                 ship.setState(ship_state)
 
-            # Update asteroids from server state (do not clear, just update or add new ones)
+            # Update asteroids from server state (with interpolation)
             asteroid_ids = set()
             if hasattr(state, 'asteroids'):
                 for asteroid_state in state.asteroids:
                     asteroid_ids.add(asteroid_state.id)
-                    # Try to find existing asteroid by id
-                    found = False
-                    for asteroid in asteroids:
-                        if asteroid.id == asteroid_state.id:
-                            asteroid.set_pos(asteroid_state.x, asteroid_state.y)
-                            asteroid.set_dimensions(asteroid_state.width, asteroid_state.height)
-                            asteroid.set_speed(asteroid_state.speed)
-                            asteroid.set_angle(asteroid_state.angle)
-                            asteroid.health = asteroid_state.health
-                            asteroid.max_health = asteroid_state.max_health
-                            asteroid.set_active(True)
-                            found = True
-                            break
-                    if not found:
-                        new_asteroid = Asteroid(asteroid_state.id)
-                        new_asteroid.set_pos(asteroid_state.x, asteroid_state.y)
-                        new_asteroid.set_dimensions(asteroid_state.width, asteroid_state.height)
-                        new_asteroid.set_speed(asteroid_state.speed)
-                        new_asteroid.set_angle(asteroid_state.angle)
-                        new_asteroid.health = asteroid_state.health
-                        new_asteroid.max_health = asteroid_state.max_health
-                        new_asteroid.set_active(True)
-                        asteroids.append(new_asteroid)
-                # Optionally, deactivate asteroids not present in the server state
-                for asteroid in asteroids:
-                    if asteroid.id not in asteroid_ids:
-                        asteroid.set_active(False)
+                    if asteroid_state.id in asteroid_map:
+                        asteroid = asteroid_map[asteroid_state.id]
+                        asteroid.prev_posX = getattr(asteroid, 'next_posX', asteroid.posX)
+                        asteroid.prev_posY = getattr(asteroid, 'next_posY', asteroid.posY)
+                        asteroid.next_posX = asteroid_state.x
+                        asteroid.next_posY = asteroid_state.y
+                        asteroid.last_update_time = time.time()
+                        asteroid.set_dimensions(asteroid_state.width, asteroid_state.height)
+                        asteroid.set_speed(asteroid_state.speed)
+                        asteroid.set_angle(asteroid_state.angle)
+                        asteroid.health = asteroid_state.health
+                        asteroid.max_health = asteroid_state.max_health
+                        asteroid.set_active(True)
+                    else:
+                        asteroid = Asteroid(asteroid_state.id)
+                        asteroid.prev_posX = asteroid_state.x
+                        asteroid.prev_posY = asteroid_state.y
+                        asteroid.next_posX = asteroid_state.x
+                        asteroid.next_posY = asteroid_state.y
+                        asteroid.last_update_time = time.time()
+                        asteroid.set_pos(asteroid_state.x, asteroid_state.y)
+                        asteroid.set_dimensions(asteroid_state.width, asteroid_state.height)
+                        asteroid.set_speed(asteroid_state.speed)
+                        asteroid.set_angle(asteroid_state.angle)
+                        asteroid.health = asteroid_state.health
+                        asteroid.max_health = asteroid_state.max_health
+                        asteroid.set_active(True)
+                        asteroid_map[asteroid_state.id] = asteroid
+                # Remove asteroids not present in the server state
+                for aid in list(asteroid_map.keys()):
+                    if aid not in asteroid_ids:
+                        del asteroid_map[aid]
+            # Update asteroids list for rendering
+            asteroids.clear()
+            asteroids.extend(asteroid_map.values())
 
             # Update bullets for each ship (shared pool, assign to all ships for now)
             for ship in ships:
@@ -95,7 +105,10 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             if hasattr(state, 'bullets'):
                 from entities.bullet import Bullet
                 for bullet_state in state.bullets:
+
+
                     bullet = Bullet(
+                        bullet_state.id,
                         bullet_state.x,
                         bullet_state.y,
                         bullet_state.angle
@@ -105,9 +118,26 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                     bullet.damage = bullet_state.damage
                     bullet.width = bullet_state.width
                     bullet.height = bullet_state.height
-                    # Assign to all ships for now (or filter by owner if you add that info)
+
+                    #find the existing bullets 
+                    found = False
                     for ship in ships:
-                        ship.bullets.append(bullet)
+                        for existing_bullet in ship.bullets:
+                            if existing_bullet.id == bullet_state.id:
+                                existing_bullet.set_pos(bullet_state.x, bullet_state.y)
+                                existing_bullet.set_speed(bullet_state.speed)
+                                existing_bullet.set_angle(bullet_state.angle)
+                                existing_bullet.active = bullet_state.active
+                                found = True
+                                break
+                        if found:
+                            break
+                    if not found:
+                        # Add the bullet to the first ship's bullets list
+                        if ships:
+                            ships[0].bullets.append(bullet)
+            
+                        
 
             # TODO: Add similar logic for powerups if needed
 
@@ -215,10 +245,13 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         # Limpiar la pantalla
         screen.fill(stt.BLACK)
 
-        #!!!!!!!!!!!!!!! Dibujar asteroides
         for asteroid in asteroids:
-            asteroid.Update(delta_time, screen)
-            asteroid.draw_health(screen)
+            now = time.time()
+            t = min((now - getattr(asteroid, 'last_update_time', now)) / INTERPOLATION_DELAY, 1.0)
+            interp_x = getattr(asteroid, 'prev_posX', asteroid.posX) * (1 - t) + getattr(asteroid, 'next_posX', asteroid.posX) * t
+            interp_y = getattr(asteroid, 'prev_posY', asteroid.posY) * (1 - t) + getattr(asteroid, 'next_posY', asteroid.posY) * t
+            asteroid.draw_at(screen, interp_x, interp_y)
+            asteroid.draw_health(screen,interp_x,interp_y)
 
         # Dibujar mensajes temporales
         for message in messages[:]:
@@ -240,7 +273,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
         for asteroid in released_asteroids[:]:
             asteroid.Update(delta_time, screen)
-            asteroid.draw_health(screen)
+            asteroid.draw_health(screen,asteroid.posX,asteroid.posY)
             # if asteroid.health <= 0:
             #     released_asteroids.remove(asteroid)
 

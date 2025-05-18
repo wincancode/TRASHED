@@ -3,6 +3,7 @@ import pygame
 from entities.entity import Entity
 import settings as stt
 import math
+import time
 
 class Asteroid(Entity):
     def __init__(self, id, difficulty_factor=1):
@@ -22,6 +23,7 @@ class Asteroid(Entity):
         self.max_health = (self.width // 10) + difficulty_factor
         self.health = self.max_health
 
+
     def updatePosition(self, delta_time):
         self.speedX = self.speed * math.cos(math.radians(self.angle))
         self.speedY = self.speed * math.sin(math.radians(self.angle))
@@ -38,12 +40,17 @@ class Asteroid(Entity):
         )
         self.set_angle(random.uniform(0, 360))
 
-    def draw_health(self, screen):
-        """Dibuja la vida del asteroide encima de él."""
+
+    def draw_health(self, screen, x=None, y=None):
+        """Dibuja la vida del asteroide encima de él, usando x, y si se proporcionan."""
         font = pygame.font.Font(None, 20)
+        draw_x = x if x is not None else self.posX
+        draw_y = y if y is not None else self.posY
         health_text = font.render(f"{self.health}", True, (255, 255, 255))  # Blanco
-        text_rect = health_text.get_rect(center=(self.posX, self.posY - self.height // 2 - 10))
+        text_rect = health_text.get_rect(center=(draw_x, draw_y - self.height // 2 - 10))
         screen.blit(health_text, text_rect)
+
+
 
 def release_asteroids(ship, released_asteroids):
     """Libera asteroides alrededor de la nave al romperse el escudo."""

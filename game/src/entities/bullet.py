@@ -4,7 +4,8 @@ import settings as stt
 from entities.entity import Entity
 
 class Bullet(Entity):
-    def __init__(self, x, y, angle, laser_boost_level=0):
+    def __init__(self,id, x, y, angle, laser_boost_level=0):
+        self.id= id
         self.posX = x
         self.posY = y
         self.angle = angle

@@ -32,6 +32,7 @@ type game struct {
 	PowerUps map[int]*gameLogic.PowerUp // key: powerUpId
 	LatestInputs map[string]*proto.Input // Store latest input per player
 	Level *gameLogic.Level // Game level state
+	NextBulletID int // Next bullet ID to be assigned
 }
 
 func NewServer() *server {
@@ -200,7 +201,6 @@ func (s *server) StartGame(ctx context.Context, in *proto.GameCode) (*proto.Bool
 	return &proto.BoolMessage{Value: true}, nil;
 }
 
-
 // Fixed-tick game loop for each game
 func (s *server) runGameLoop(gameCode string) {
 	ticker := time.NewTicker(time.Second / 60) // 60 FPS
@@ -218,25 +218,6 @@ func (s *server) runGameLoop(gameCode string) {
 		}
 
 		
-		// Convert maps to slices for collision logic
-		bullets := make([]gameLogic.Bullet, 0, len(game.Bullets))
-		for _, b := range game.Bullets {
-			if b != nil {
-				bullets = append(bullets, *b)
-			}
-		}
-		asteroids := make([]gameLogic.Asteroid, 0, len(game.Asteroids))
-		for _, a := range game.Asteroids {
-			if a != nil {
-				asteroids = append(asteroids, *a)
-			}
-		}
-		powerUps := make([]gameLogic.PowerUp, 0, len(game.PowerUps))
-		for _, p := range game.PowerUps {
-			if p != nil {
-				powerUps = append(powerUps, *p)
-			}
-		}
 		
 		
 		
@@ -249,29 +230,64 @@ func (s *server) runGameLoop(gameCode string) {
 				input = &proto.Input{}
 			}
 			if input.IsShoot && ship.LastShotTime.Add(200*time.Millisecond).Before(time.Now()) {
-				bullet := gameLogic.InitializeBullet(ship.PosX, ship.PosY, ship.Angle, game.Level.DifficultyFactor)
-				bulletID := len(game.Bullets) + 1
+				bullet := gameLogic.InitializeBullet(ship.PosX, ship.PosY, ship.Angle,ship.LaserBoostLevel,playerID)
+				game.NextBulletID++
+				bulletID :=  game.NextBulletID
 				game.Bullets[bulletID] = &bullet
 				game.Ships[playerID].LastShotTime = time.Now()
 			}
 		}
 
-		//update bullets
-		for id, bullet := range game.Bullets {
+		//update bullet positions
+		for _, bullet := range game.Bullets {
 			if bullet != nil {
-				gameLogic.UpdateBulletPosition(bullet, deltaTime,1000,1000)
-				if !bullet.Active {
-					delete(game.Bullets, id)
-				}
+					gameLogic.UpdateBulletPosition(bullet, deltaTime,1000,1000)
 			}
 		}
+
+		//instantiate asteroids if needed
+		if len(game.Asteroids) < game.Level.MinAsteroids {
+			asteroid := gameLogic.InitializeAsteroid(len(game.Asteroids), game.Level.DifficultyFactor)
+			game.Asteroids[asteroid.ID] = &asteroid
+		}
+
+
+		//update asteroids
+		for _, asteroid := range game.Asteroids {
+			if asteroid != nil {				
+				gameLogic.UpdateAsteroidPosition(asteroid, deltaTime, 800, 600)
+			}
+		}
+
 		
 		//manage asteroid collisions with bullets, score and difficulty logic
 		points, destroyed_count := gameLogic.HandleBulletAsteroidCollisions(
-			&bullets,
-			&asteroids,
-			&powerUps,
+			game.Bullets,
+			game.Asteroids,
+			game.PowerUps,
 		)
+
+		
+		//*destroy deactivated objects
+
+		//destroy bullets
+		for id, bullet := range game.Bullets {
+			if bullet != nil && !bullet.Active {
+				delete(game.Bullets, id)
+			}
+		}
+
+		//destroy asteroids
+		for id, asteroid := range game.Asteroids {
+			if asteroid != nil && asteroid.Health <= 0 {
+				delete(game.Asteroids, id)
+			}
+		}
+
+		
+		
+
+
 
 		game.Level.AsteroidsDestroyed += destroyed_count
 		game.Level.AsteroidsToNextLevel -= destroyed_count
@@ -425,6 +441,7 @@ func BulletStateToProto(id int, bullet *gameLogic.Bullet) *proto.BulletState {
 		Damage: int32(bullet.Damage),
 		Width: int32(bullet.Width),
 		Height: int32(bullet.Height),
+		Owneruuid: bullet.Owneruuid,
 	}
 }
 
