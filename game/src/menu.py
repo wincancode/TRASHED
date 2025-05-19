@@ -7,7 +7,6 @@ import server.service_pb2_grpc as service_pb2_grpc
 import settings as stt
 import sys
 import threading
-from crt import draw_crt_effect
 
 
 
@@ -54,7 +53,7 @@ def show_main_menu(screen):
         # Dibujar texto
         screen.blit(title_text, title_rect)
         screen.blit(message_text, message_rect)
-        draw_crt_effect(screen)
+
         pygame.display.flip()
 
 def send_game_state_to_server(game_code, ships):
@@ -153,7 +152,6 @@ def show_start_screen():
                     print("Tutorial seleccionado")
                     return "tutorial"
 
-        draw_crt_effect(screen)
         pygame.display.flip()
         clock.tick(60)
 
@@ -301,7 +299,6 @@ def show_game_over_screen(screen, screen_width, screen_height):
     text_rect = text.get_rect(center=(screen_width // 2, screen_height // 2))
     screen.fill(stt.BLACK)
     screen.blit(text, text_rect)
-    draw_crt_effect(screen)
     pygame.display.flip()
     pygame.time.wait(6000)  # Wait for 3 seconds
     return "back"  # Return to the main menu
@@ -438,7 +435,6 @@ def show_waiting_screen(game_code, player_id, player_name):
             player_rect = player_text.get_rect(center=(screen_width // 2, screen_height // 2 + i * 30))
             screen.blit(player_text, player_rect)
 
-        draw_crt_effect(screen)
         pygame.display.flip()
 
         for event in pygame.event.get():
