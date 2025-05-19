@@ -57,10 +57,6 @@ func generateGameCode() string {
 	for i := range code {
 		code[i] = charset[rand.Intn(len(charset))]
 	}
-
-
-	//!!!!!!!!!!!!!!!!!!!!
-	code = []byte("2")
 	return string(code)
 }
 
@@ -127,6 +123,36 @@ func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGam
 
 	log.Printf("Nuevo jugador agregado: %s, username: %s, slot: %d", player.PlayerUuid, player.Username, player.Slot)
 
+	// Graceful disconnect: remove player on stream close
+	defer func() {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		game, exists := s.games[gameCode]
+		if exists {
+			// Only remove player if the game has NOT started
+			if !game.Data.Started {
+				newPlayers := []*proto.PlayerData{}
+				for _, p := range game.Data.Players {
+					if p.PlayerUuid != player.PlayerUuid {
+						newPlayers = append(newPlayers, p)
+					}
+				}
+				game.Data.Players = newPlayers
+				if game.Ships != nil {
+					delete(game.Ships, player.PlayerUuid)
+				}
+				if game.LatestInputs != nil {
+					delete(game.LatestInputs, player.PlayerUuid)
+				}
+				if game.SubscribedInputStreams != nil {
+					delete(game.SubscribedInputStreams, player.PlayerUuid)
+				}
+				s.games[gameCode] = game
+				log.Printf("Jugador desconectado: %s", player.PlayerUuid)
+			}
+		}
+	}()
+
 	// Enviar actualizaciones de la lista de jugadores conectados
 	for {
 		s.mu.Lock()
@@ -139,7 +165,7 @@ func (s *server) JoinGame(in *proto.PlayerData, stream proto.GameService_JoinGam
 
 		if err := stream.Send(gameData); err != nil {
 			log.Printf("Error enviando datos de la partida: %v", err)
-			return err
+			return err // This will trigger the defer above
 		}	
 
 		time.Sleep(1 * time.Second) // Enviar actualizaciones cada segundo

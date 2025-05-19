@@ -226,10 +226,31 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
     level = Level()
 
     running = True
+    disconnected = False
+
+    def handle_disconnection():
+        from menu import show_disconnected_screen, show_main_menu
+        show_disconnected_screen(screen)
+        show_main_menu(screen)
+
+    # Thread to monitor input updates and catch disconnection
+    def input_updates_wrapper():
+        try:
+            join_game_state_updates(game_code, user_uuid, obtain_game_state_callback, local_player_input_iterator)
+        except Exception as e:
+            print(f"[GAME] Disconnected from server: {e}")
+            nonlocal disconnected
+            disconnected = True
+
+    Input_updates_thread = threading.Thread(target=input_updates_wrapper)
+    Input_updates_thread.start()
 
     nuke_cooldown = 0  # Tiempo restante para volver a spawnear asteroides tras la nuke
 
     while running:
+        if disconnected:
+            handle_disconnection()
+            return "back"
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False

@@ -18,9 +18,6 @@ screen_width, screen_height = stt.GAME_WIDTH, stt.GAME_HEIGHT
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Moving Triangle")
 
-show_main_menu(screen)
-
-
 Mostrar_inicio = True
 
 user_uuid = ''
@@ -84,21 +81,36 @@ def show_controls_tutorial_screen(screen):
                 running = False
                 break
 
-while True:
-    if Mostrar_inicio:
+def main_loop():
+    user_uuid = ''
+    game_code = ''
+    online_players = []
+    while True:
+        show_main_menu(screen)
         while True:
             start_option = show_start_screen()
+            print(f"start_option: {start_option}")
             if start_option == "join":
                 result, user_uuid, game_code, online_players = show_join_game_screen()
                 if result == "back":
-                    continue  # Volver al menú principal
+                    continue  # Regresar al menú principal
             elif start_option == "create":
                 result, user_uuid, game_code, online_players = show_create_game_screen()
                 if result == "back":
-                    continue  # Volver al menú principal
+                    continue  # Regresar al menú principal
             elif start_option == "tutorial":
                 show_tutorial_screen(screen)
                 show_controls_tutorial_screen(screen)
                 continue
-            break
-    start_game(screen, screen_width, screen_height, game_code, user_uuid, online_players)
+            else:
+                continue
+            break  # Salir del bucle de selección de juego
+
+        start_game(screen, screen_width, screen_height, game_code, user_uuid, online_players)
+        # Limpiar variables para la siguiente vuelta
+        user_uuid = ''
+        game_code = ''
+        online_players = []
+
+if __name__ == "__main__":
+    main_loop()
