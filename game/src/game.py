@@ -12,6 +12,7 @@ from menu import show_game_over_screen
 import settings as stt
 from level import Level
 from ui import draw_text, draw_progress_bar
+from crt import apply_crt_effect
 
 
 
@@ -215,10 +216,10 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             local_player_inputs = actions
 
 
-    def getInputs(deltaTime):
-         keys = pygame.key.get_pressed()
-         ship1.control(keys)
-         ship1.updatePosition(deltaTime)
+    # def getInputs(deltaTime):
+    #      keys = pygame.key.get_pressed()
+    #      ship1.control(keys)
+    #      ship1.updatePosition(deltaTime)
 
 
     # Inicializar el sistema de niveles
@@ -255,24 +256,28 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         # Limpiar la pantalla
         screen.fill(stt.BLACK)
 
+        # --- Draw game as usual to a temporary surface ---
+        temp_surface = pygame.Surface((screen_width, screen_height)).convert_alpha()
+        temp_surface.fill(stt.BLACK)
+
         for asteroid in asteroids:
             now = time.time()
             t = min((now - getattr(asteroid, 'last_update_time', now)) / INTERPOLATION_DELAY, 1.0)
             interp_x = getattr(asteroid, 'prev_posX', asteroid.posX) * (1 - t) + getattr(asteroid, 'next_posX', asteroid.posX) * t
             interp_y = getattr(asteroid, 'prev_posY', asteroid.posY) * (1 - t) + getattr(asteroid, 'next_posY', asteroid.posY) * t
-            asteroid.draw_at(screen, interp_x, interp_y)
-            asteroid.draw_health(screen,interp_x,interp_y)
+            asteroid.draw_at(temp_surface, interp_x, interp_y)
+            asteroid.draw_health(temp_surface,interp_x,interp_y)
 
         # Dibujar mensajes temporales
         for message in messages[:]:
             if "text" in message:
-                draw_text(screen, message["text"], message["pos"], (255, 255, 255), opacity=int(message["opacity"]))
+                draw_text(temp_surface, message["text"], message["pos"], (255, 255, 255), opacity=int(message["opacity"]))
             elif "icon" in message:
                 icon_img = pygame.image.load(message["icon"])
                 icon_img = pygame.transform.scale(icon_img, (48, 48))
                 icon_img.set_alpha(int(message["opacity"]))
                 icon_rect = icon_img.get_rect(center=message["pos"])
-                screen.blit(icon_img, icon_rect)
+                temp_surface.blit(icon_img, icon_rect)
 
             message["timer"] -= delta_time
             message["pos"][1] -= 50 * delta_time
@@ -282,7 +287,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                 messages.remove(message)
 
         for powerup in powerups[:]:
-            powerup.draw(screen)
+            powerup.draw(temp_surface)
             powerup.update(delta_time)
             if check_powerup_collisions(ship1, powerup):  # Detectar si la nave recoge el potenciador
                 if powerup.power_type == "nuke":
@@ -294,15 +299,15 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
                 powerups.remove(powerup)
 
         for asteroid in released_asteroids[:]:
-            asteroid.Update(delta_time, screen)
-            asteroid.draw_health(screen,asteroid.posX,asteroid.posY)
+            asteroid.Update(delta_time, temp_surface)
+            asteroid.draw_health(temp_surface,asteroid.posX,asteroid.posY)
             # if asteroid.health <= 0:
             #     released_asteroids.remove(asteroid)
 
         # Mostrar el mensaje de "Subiste de Nivel"
         if level.level_up_message_timer > 0:
             level.level_up_message_timer -= delta_time
-            draw_text(screen, "¡Subiste de Nivel!", (screen_width // 2, screen_height // 2), (255, 255, 0), font_size=50, center=True)
+            draw_text(temp_surface, "¡Subiste de Nivel!", (screen_width // 2, screen_height // 2), (255, 255, 0), font_size=50, center=True)
 
         # Dibujar la nave
         if pygame.key.get_focused():
@@ -313,7 +318,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             if ship.lives <= 0:
                 continue
 
-            ship.draw(screen,delta_time)
+            ship.draw(temp_surface,delta_time)
             ship.updatePosition(delta_time)  # Update the ship's position with a small delta time
 
         #check if game ended 
@@ -325,17 +330,17 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             
 
         # Mostrar la puntuación acumulada
-        draw_text(screen, f"Puntos: {level.score}", (10, 10), (255, 255, 255))
+        draw_text(temp_surface, f"Puntos: {level.score}", (10, 10), (255, 255, 255))
 
         # Mostrar las vidas
-        draw_text(screen, f"Vidas: {ship1.lives}", (screen_width - 120, 10), (255, 255, 255))
+        draw_text(temp_surface, f"Vidas: {ship1.lives}", (screen_width - 120, 10), (255, 255, 255))
 
         # Mostrar el nivel actual
-        draw_text(screen, f"Nivel: {level.current_level}", (screen_width // 2 - 50, 10), (255, 255, 255))
+        draw_text(temp_surface, f"Nivel: {level.current_level}", (screen_width // 2 - 50, 10), (255, 255, 255))
 
         # Dibujar la barra de progreso para el siguiente nivel
         draw_progress_bar(
-            screen,
+            temp_surface,
             x=10, y=50,  # Posición de la barra
             width=200, height=20,  # Tamaño de la barra
             progress=level.asteroids_destroyed,  # Progreso actual
@@ -343,11 +348,9 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             color=(0, 255, 0),  # Color de la barra (verde)
             bg_color=(50, 50, 50)  # Color de fondo (gris oscuro)
         )
-
-
-        
-
-        # Actualizar la pantalla
+        # --- Apply CRT effect and blit to screen ---
+        crt_surface = apply_crt_effect(temp_surface, scanline_alpha=60, vignette_strength=1, glow_strength=8, glow_radius=4)
+        screen.blit(crt_surface, (0, 0))
         pygame.display.flip()
     
     return "back"

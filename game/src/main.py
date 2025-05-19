@@ -16,7 +16,7 @@ pygame.init()
 # Set up the screen
 screen_width, screen_height = stt.GAME_WIDTH, stt.GAME_HEIGHT
 screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Moving Rectangle")
+pygame.display.set_caption("Moving Triangle")
 
 show_main_menu(screen)
 

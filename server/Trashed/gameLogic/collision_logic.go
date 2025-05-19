@@ -17,7 +17,7 @@ func HandleShipAsteroidCollisions(ship *ShipState, asteroids map[int]*Asteroid, 
 		if asteroid == nil {
 			continue
 		}
-		if CheckCollision(ship.PosX, ship.PosY, 50, 50, asteroid.PosX, asteroid.PosY, float64(asteroid.Width), float64(asteroid.Height)) {
+		if CheckCollision(ship.PosX, ship.PosY, 10, 10, asteroid.PosX, asteroid.PosY, float64(asteroid.Width), float64(asteroid.Height)) {
 			if ship.ShieldActive {
 				ship.ShieldCharges--
 				if ship.ShieldCharges <= 0 {
