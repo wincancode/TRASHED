@@ -214,13 +214,6 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         with lock:
             local_player_inputs = actions
 
-
-    def getInputs(deltaTime):
-         keys = pygame.key.get_pressed()
-         ship1.control(keys)
-         ship1.updatePosition(deltaTime)
-
-
     # Inicializar el sistema de niveles
     level = Level()
 
@@ -348,6 +341,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         
 
         # Actualizar la pantalla
+        
         pygame.display.flip()
     
     return "back"

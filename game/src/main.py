@@ -9,6 +9,7 @@ import pygame
 from game import start_game
 from menu import show_start_screen, show_create_game_screen, show_join_game_screen, show_main_menu
 from ui import draw_text
+from crt import draw_crt_effect
 import settings as stt
 # Initialize Pygame
 pygame.init()
@@ -47,6 +48,7 @@ def show_tutorial_screen(screen):
             draw_text(screen, info["desc"], (170, y+40), (200,200,200), font_size=24)
             y += 90
         draw_text(screen, "Presiona ESC para volver", (screen.get_width()//2, y+40), (255,255,255), font_size=28, center=True)
+        draw_crt_effect(screen)
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -75,6 +77,7 @@ def show_controls_tutorial_screen(screen):
             draw_text(screen, desc, (220, y), (200,200,200), font_size=28)
             y += 60
         draw_text(screen, "Presiona ESC para volver", (screen.get_width()//2, y+40), (255,255,255), font_size=28, center=True)
+        draw_crt_effect(screen)
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
