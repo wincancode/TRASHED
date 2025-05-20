@@ -12,9 +12,38 @@ class Bullet(Entity):
         self.speed = stt.SHOT_BASE_SPEED
         self.active = True
         self.damage= 1 + laser_boost_level
+        self.laser_boost_level = laser_boost_level
 
-        self.sprite = pygame.image.load(stt.SHOT_DEFAULT_SPRITE)
-        self.sprite = pygame.transform.scale(self.sprite, (5, 10))
+
+        sprite_scales = {
+            0: (15, 35),
+            1: (15, 45),
+            2: (15, 50),
+            3: (30, 70),
+            4: (40, 80),
+            5: (50, 80),  # Para nivel 5 o superior
+        }
+
+        scale = sprite_scales.get(laser_boost_level, sprite_scales[5])
+
+
+        # Selección de sprite según el nivel de laser boost
+        if laser_boost_level == 0:
+            sprite_path = stt.SHOT_DEFAULT_SPRITE
+
+        elif laser_boost_level == 1:
+            sprite_path = getattr(stt, 'SHOT_LASER_1_SPRITE', stt.SHOT_DEFAULT_SPRITE)
+        elif laser_boost_level == 2:
+            sprite_path = getattr(stt, 'SHOT_LASER_2_SPRITE', stt.SHOT_DEFAULT_SPRITE)
+        elif laser_boost_level == 3:
+            sprite_path = getattr(stt, 'SHOT_LASER_3_SPRITE', stt.SHOT_DEFAULT_SPRITE)
+        elif laser_boost_level == 4:
+            sprite_path = getattr(stt, 'SHOT_LASER_4_SPRITE', stt.SHOT_DEFAULT_SPRITE)
+        else:
+            sprite_path = getattr(stt, 'SHOT_LASER_4_SPRITE', stt.SHOT_DEFAULT_SPRITE)
+
+        self.sprite = pygame.image.load(sprite_path)
+        self.sprite = pygame.transform.scale(self.sprite, scale)
         self.width = self.sprite.get_width()
         self.height = self.sprite.get_height()
 
@@ -32,7 +61,6 @@ class Bullet(Entity):
         # Ajustar la posición para centrar el sprite rotado
         sprite_rect = rotated_sprite.get_rect(center=(self.posX, self.posY))
         screen.blit(rotated_sprite, sprite_rect.topleft)
-    
 
 
-        
+

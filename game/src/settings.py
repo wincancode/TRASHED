@@ -1,4 +1,3 @@
-
 import os
 
 #needed constants
@@ -43,7 +42,11 @@ SHIP_LIVES = 3  # Number of lives for the ship
 # Shot constants
 SHOT_BASE_SPEED = 300  # Base speed of the shot in units per second
 SHOT_BASE_DAMAGE = 1  # Base damage of the shot
-SHOT_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shot.png")  # D  # Default sprite for the shot
+SHOT_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot1.png")  
+SHOT_LASER_1_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot2.png") 
+SHOT_LASER_2_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot3.png")
+SHOT_LASER_3_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot4.png")
+SHOT_LASER_4_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "shoot5.png")
 
 # Ship sprite dimensions
 SHIP_WIDTH = 30  # Width of the ship in pixels
@@ -55,7 +58,11 @@ ASTEROID_BASE_ACCELERATION = 0.5  # Base acceleration of the asteroid in units p
 ASTEROID_VARIANCE = 0.5  # Variance in speed for asteroids
 ASTEROID_DEFAULT_SPRITE = os.path.join(BASE_DIR,"..","assets","sprites", "asteroid.png")  # Default sprite for the asteroid
 
-
+# Powerup asset image paths
+SHIELD_UPGRADE_ICON = os.path.join(BASE_DIR, "..", "assets", "sprites", "ShieldUpgrade.png")
+DAMAGE_UP_ICON = os.path.join(BASE_DIR, "..", "assets", "sprites", "DamageUp.png")
+NUKE_ICON = os.path.join(BASE_DIR, "..", "assets", "sprites", "Nuke.png")
+TURBINAS_ICON = os.path.join(BASE_DIR, "..", "assets", "sprites", "Turbinas.png")
 
 
 

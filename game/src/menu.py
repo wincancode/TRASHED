@@ -100,12 +100,12 @@ def show_start_screen():
     button_spacing = 20
     button_x = (screen_width - button_width) // 2
     button_y = screen_height // 2
-    
+
     asteroids = create_background_asteroids(15)
 
     while True:
         screen.fill(stt.BLACK)
-        
+
         delta_time = clock.tick(stt.GAME_FPS) / 1000.0
         update_and_draw_asteroids(asteroids, screen, delta_time)
 
@@ -117,20 +117,40 @@ def show_start_screen():
         click = pygame.mouse.get_pressed()[0]
 
         # Draw buttons
-        create_game = draw_button(screen, "Crear partida", button_x, button_y + button_height + button_spacing, button_width, button_height, font_button, stt.BLACK, stt.BLUE, mouse_pos, click)
-        join_game = draw_button(screen, "Unirse a partida", button_x, button_y, button_width, button_height, font_button, stt.BLACK, stt.BLUE, mouse_pos, click)
+        create_game = draw_button(
+            screen, "Crear partida",
+            button_x, button_y + button_height + button_spacing,
+            button_width, button_height, font_button,
+            stt.BLACK, stt.BLUE, mouse_pos, click
+        )
+        join_game = draw_button(
+            screen, "Unirse a partida",
+            button_x, button_y,
+            button_width, button_height, font_button,
+            stt.BLACK, stt.BLUE, mouse_pos, click
+        )
+        tutorial = draw_button(
+            screen, "Tutorial",
+            button_x, button_y + 2 * (button_height + button_spacing),
+            button_width, button_height, font_button,
+            stt.BLACK, stt.BLUE, mouse_pos, click
+        )
 
-        if join_game:
-            print("Unirse a partida seleccionado")
-            return "join"
-        if create_game:
-            print("Crear partida seleccionado")
-            return "create"
-
+        # Only return if the mouse was released after a click (prevents accidental double triggers)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.MOUSEBUTTONUP:
+                if join_game and join_game:  # Button was pressed and mouse released
+                    print("Unirse a partida seleccionado")
+                    return "join"
+                if create_game and create_game:
+                    print("Crear partida seleccionado")
+                    return "create"
+                if tutorial and tutorial:
+                    print("Tutorial seleccionado")
+                    return "tutorial"
 
         pygame.display.flip()
         clock.tick(60)
@@ -141,13 +161,16 @@ def show_create_game_screen():
 
     # Si el usuario presionó "Regresar", salir de la función
     if player_id is None and player_name is None:
-        return "back"
+        return "back", '', '', []
 
     # Solicitar el código de partida al servidor
     game_code = request_game_code_from_server()
     if not game_code:
         print("Error al crear la partida.")
-        return
+        from menu import show_disconnected_screen, show_main_menu
+        show_disconnected_screen(screen)
+        show_main_menu(screen)
+        return "back", '', '', []
 
     # Mostrar pantalla de espera
     online_players = show_waiting_screen(game_code, player_id, player_name)
@@ -234,13 +257,19 @@ def show_join_game_screen():
                     # Validar que los campos no estén vacíos
                     if player_id and player_name and game_code:
                         # Mostrar pantalla de espera
-                        online_players = show_waiting_screen(game_code, player_id, player_name)
+                        try:
+                            online_players = show_waiting_screen(game_code, player_id, player_name)
+                        except Exception as e:
+                            from menu import show_disconnected_screen, show_main_menu
+                            show_disconnected_screen(screen)
+                            show_main_menu(screen)
+                            return "back", '', '', []
                         return  '', player_id, game_code, online_players
                     else:
-                        return '', '', ''
+                        return "back", '', '', []
                 elif back_button_box.collidepoint(event.pos):
                     # Regresar al menú principal
-                    return "back"
+                    return "back", '', '', []
                 else:
                     active_id = False
                     active_name = False
@@ -261,7 +290,6 @@ def show_join_game_screen():
                         game_code = game_code[:-1]
                     else:
                         game_code += event.unicode
-
         clock.tick(30)
 
 def show_game_over_screen(screen, screen_width, screen_height):
@@ -272,7 +300,8 @@ def show_game_over_screen(screen, screen_width, screen_height):
     screen.fill(stt.BLACK)
     screen.blit(text, text_rect)
     pygame.display.flip()
-    pygame.time.wait(3000)  # Wait for 3 seconds
+    pygame.time.wait(6000)  # Wait for 3 seconds
+    return "back"  # Return to the main menu
 
 def show_player_data_screen():
     font = pygame.font.Font(None, 50)
@@ -367,24 +396,24 @@ def show_waiting_screen(game_code, player_id, player_name):
     font = pygame.font.Font(None, 50)
     is_game_started = False
     players = []  # Lista de jugadores conectados
+    disconnected = False
 
     def update_players(new_players,started_flag):
-        nonlocal players
+        nonlocal players, disconnected, is_game_started
         players = new_players  # Almacenar los objetos completos de tipo PlayerData
         print(f"Jugadores conectados: {[player for player in players]}")
-
-        if(started_flag):
+        if started_flag:
             print('assigning game started')
-            nonlocal is_game_started
             is_game_started = True
-
-
+        # Only set disconnected if not started, new_players is empty, and not is_game_started
+        elif new_players == [] and not is_game_started and not started_flag:
+            disconnected = True
 
     # Iniciar un hilo para escuchar los mensajes del servidor
     thread = threading.Thread(target=connect_to_server, args=(player_id, player_name, game_code, update_players))
     thread.start()
 
-    while not is_game_started:
+    while not is_game_started and not disconnected:
         screen.fill(stt.BLACK)
 
         # Mostrar el código de la partida
@@ -418,5 +447,36 @@ def show_waiting_screen(game_code, player_id, player_name):
                     
         clock.tick(30)
     
+    if disconnected:
+        from menu import show_main_menu, show_disconnected_screen
+        show_disconnected_screen(screen)
+        show_main_menu(screen)
+        return []
     print("Game started!")
     return players
+
+def show_disconnected_screen(screen):
+    import pygame
+    import settings as stt
+    from background import create_background_asteroids, update_and_draw_asteroids
+    font = pygame.font.Font(None, 74)
+    small_font = pygame.font.Font(None, 40)
+    asteroids = create_background_asteroids(10)
+    clock = pygame.time.Clock()
+    timer = 0
+    while timer < 2.5:  # Show for 2.5 seconds
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+        screen.fill(stt.BLACK)
+        delta_time = clock.tick(stt.GAME_FPS) / 1000.0
+        update_and_draw_asteroids(asteroids, screen, delta_time)
+        text = font.render("Desconectado", True, stt.RED)
+        text_rect = text.get_rect(center=(stt.GAME_WIDTH // 2, stt.GAME_HEIGHT // 2 - 30))
+        screen.blit(text, text_rect)
+        msg = small_font.render("Perdiste la conexión con el servidor", True, stt.WHITE)
+        msg_rect = msg.get_rect(center=(stt.GAME_WIDTH // 2, stt.GAME_HEIGHT // 2 + 40))
+        screen.blit(msg, msg_rect)
+        pygame.display.flip()
+        timer += delta_time

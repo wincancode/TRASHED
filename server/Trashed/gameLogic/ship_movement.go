@@ -18,6 +18,7 @@ type ShipState struct {
 	ShieldCharges   int
 	Lives           int
 	LastShotTime    time.Time
+	
 }
 
 // MovementInput represents the input for a ship's movement.
@@ -85,6 +86,16 @@ func UpdateShipPosition(ship *ShipState, input *proto.Input, deltaTime float64) 
 	vx += accelerationX * deltaTime
 	vy += accelerationY * deltaTime
 
+	// Limit speed to maximum speed
+	maxSpeed := 200.0 // Maximum speed
+	if math.Sqrt(vx*vx+vy*vy) > maxSpeed {
+		speedFactor := maxSpeed / math.Sqrt(vx*vx+vy*vy)
+		vx *= speedFactor
+		vy *= speedFactor
+	}
+	
+
+
 	// Apply friction if not accelerating
 	if accelerationX == 0 {
 		vx -= shipAcceleration * deltaTime * sign(vx)
@@ -102,6 +113,20 @@ func UpdateShipPosition(ship *ShipState, input *proto.Input, deltaTime float64) 
 	// Update position based on velocity
 	ship.PosX += vx * deltaTime
 	ship.PosY += vy * deltaTime
+
+	// if the ship is out of bounds, wrap around the screen
+	if ship.PosX < 0 {
+		ship.PosX += 800 // Assuming screen width is 800
+	} else if ship.PosX > 800 {
+		ship.PosX -= 800
+	}
+	if ship.PosY < 0 {
+		ship.PosY += 600 // Assuming screen height is 600
+	} else if ship.PosY > 600 {
+		ship.PosY -= 600
+	}
+
+
 
 	// Store speed for next tick
 	ship.Speed = math.Sqrt(vx*vx + vy*vy)

@@ -12,6 +12,7 @@ from menu import show_game_over_screen
 import settings as stt
 from level import Level
 from ui import draw_text, draw_progress_bar
+from crt import apply_crt_effect
 
 
 
@@ -58,6 +59,8 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             for ship in ships:
                 ship_state = state.playerStates[ship.id]
                 ship.setState(ship_state)
+                if ship.id == user_uuid:
+                    ship1.set_health(ship_state.health)
 
             # Update asteroids from server state (with interpolation)
             asteroid_ids = set()
@@ -187,7 +190,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         target=join_game_state_updates,
         args=(game_code,user_uuid,obtain_game_state_callback,local_player_input_iterator)
     )
-    Input_updates_thread.start()
+    # Input_updates_thread.start()
 
 
     key_action_map = {
@@ -214,18 +217,40 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
 
 
     # def getInputs(deltaTime):
-    #     keys = pygame.key.get_pressed()
-    #     ship1.control(keys)
-    #     ship1.updatePosition(deltaTime)
+    #      keys = pygame.key.get_pressed()
+    #      ship1.control(keys)
+    #      ship1.updatePosition(deltaTime)
 
 
     # Inicializar el sistema de niveles
     level = Level()
 
     running = True
+    disconnected = False
 
+    def handle_disconnection():
+        from menu import show_disconnected_screen, show_main_menu
+        show_disconnected_screen(screen)
+        show_main_menu(screen)
+
+    # Thread to monitor input updates and catch disconnection
+    def input_updates_wrapper():
+        try:
+            join_game_state_updates(game_code, user_uuid, obtain_game_state_callback, local_player_input_iterator)
+        except Exception as e:
+            print(f"[GAME] Disconnected from server: {e}")
+            nonlocal disconnected
+            disconnected = True
+
+    Input_updates_thread = threading.Thread(target=input_updates_wrapper)
+    Input_updates_thread.start()
+
+    nuke_cooldown = 0  # Tiempo restante para volver a spawnear asteroides tras la nuke
 
     while running:
+        if disconnected:
+            handle_disconnection()
+            return "back"
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -252,64 +277,91 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         # Limpiar la pantalla
         screen.fill(stt.BLACK)
 
+        # --- Draw game as usual to a temporary surface ---
+        temp_surface = pygame.Surface((screen_width, screen_height)).convert_alpha()
+        temp_surface.fill(stt.BLACK)
+
         for asteroid in asteroids:
             now = time.time()
             t = min((now - getattr(asteroid, 'last_update_time', now)) / INTERPOLATION_DELAY, 1.0)
             interp_x = getattr(asteroid, 'prev_posX', asteroid.posX) * (1 - t) + getattr(asteroid, 'next_posX', asteroid.posX) * t
             interp_y = getattr(asteroid, 'prev_posY', asteroid.posY) * (1 - t) + getattr(asteroid, 'next_posY', asteroid.posY) * t
-            asteroid.draw_at(screen, interp_x, interp_y)
-            asteroid.draw_health(screen,interp_x,interp_y)
+            asteroid.draw_at(temp_surface, interp_x, interp_y)
+            asteroid.draw_health(temp_surface,interp_x,interp_y)
 
         # Dibujar mensajes temporales
         for message in messages[:]:
+            if "text" in message:
+                draw_text(temp_surface, message["text"], message["pos"], (255, 255, 255), opacity=int(message["opacity"]))
+            elif "icon" in message:
+                icon_img = pygame.image.load(message["icon"])
+                icon_img = pygame.transform.scale(icon_img, (48, 48))
+                icon_img.set_alpha(int(message["opacity"]))
+                icon_rect = icon_img.get_rect(center=message["pos"])
+                temp_surface.blit(icon_img, icon_rect)
+
             message["timer"] -= delta_time
             message["pos"][1] -= 50 * delta_time
             message["opacity"] -= 85 * delta_time
 
             if message["timer"] <= 0 or message["opacity"] <= 0:
                 messages.remove(message)
-            else:
-                draw_text(screen, message["text"], message["pos"], (255, 255, 255), opacity=int(message["opacity"]))
 
         for powerup in powerups[:]:
-            powerup.draw(screen)
+            powerup.draw(temp_surface)
             powerup.update(delta_time)
             if check_powerup_collisions(ship1, powerup):  # Detectar si la nave recoge el potenciador
+                if powerup.power_type == "nuke":
+                    asteroids.clear()   # Eliminar todos los asteroides
+                    released_asteroids.clear()  # Eliminar todos los asteroides liberados
+                    nuke_cooldown = 5.0
+                    nuke_spawned = True  # 5 segundos sin spawnear
                 apply_powerup_effect(ship1, powerup.power_type, messages)  # Pasar la lista de mensajes
                 powerups.remove(powerup)
 
         for asteroid in released_asteroids[:]:
-            asteroid.Update(delta_time, screen)
-            asteroid.draw_health(screen,asteroid.posX,asteroid.posY)
+            asteroid.Update(delta_time, temp_surface)
+            asteroid.draw_health(temp_surface,asteroid.posX,asteroid.posY)
             # if asteroid.health <= 0:
             #     released_asteroids.remove(asteroid)
 
         # Mostrar el mensaje de "Subiste de Nivel"
         if level.level_up_message_timer > 0:
             level.level_up_message_timer -= delta_time
-            draw_text(screen, "¡Subiste de Nivel!", (screen_width // 2, screen_height // 2), (255, 255, 0), font_size=50, center=True)
+            draw_text(temp_surface, "¡Subiste de Nivel!", (screen_width // 2, screen_height // 2), (255, 255, 0), font_size=50, center=True)
 
         # Dibujar la nave
         if pygame.key.get_focused():
             getInputs(delta_time)
 
         for ship in ships:
-            ship.draw(screen,delta_time)
+            #not render dead ships
+            if ship.lives <= 0:
+                continue
+
+            ship.draw(temp_surface,delta_time)
             ship.updatePosition(delta_time)  # Update the ship's position with a small delta time
 
+        #check if game ended 
+        if all(ship.lives <= 0 for ship in ships):
+            show_game_over_screen(screen, screen_width, screen_height)
+            running = False
+            break
+        
+            
 
         # Mostrar la puntuación acumulada
-        draw_text(screen, f"Puntos: {level.score}", (10, 10), (255, 255, 255))
+        draw_text(temp_surface, f"Puntos: {level.score}", (10, 10), (255, 255, 255))
 
         # Mostrar las vidas
-        draw_text(screen, f"Vidas: {ship1.lives}", (screen_width - 120, 10), (255, 255, 255))
+        draw_text(temp_surface, f"Vidas: {ship1.lives}", (screen_width - 120, 10), (255, 255, 255))
 
         # Mostrar el nivel actual
-        draw_text(screen, f"Nivel: {level.current_level}", (screen_width // 2 - 50, 10), (255, 255, 255))
+        draw_text(temp_surface, f"Nivel: {level.current_level}", (screen_width // 2 - 50, 10), (255, 255, 255))
 
         # Dibujar la barra de progreso para el siguiente nivel
         draw_progress_bar(
-            screen,
+            temp_surface,
             x=10, y=50,  # Posición de la barra
             width=200, height=20,  # Tamaño de la barra
             progress=level.asteroids_destroyed,  # Progreso actual
@@ -317,7 +369,9 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
             color=(0, 255, 0),  # Color de la barra (verde)
             bg_color=(50, 50, 50)  # Color de fondo (gris oscuro)
         )
-
-        # Actualizar la pantalla
+        # --- Apply CRT effect and blit to screen ---
+        crt_surface = apply_crt_effect(temp_surface, scanline_alpha=60, vignette_strength=1, glow_strength=8, glow_radius=4)
+        screen.blit(crt_surface, (0, 0))
         pygame.display.flip()
-
+    
+    return "back"
