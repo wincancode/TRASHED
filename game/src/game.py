@@ -190,7 +190,7 @@ def start_game(screen,screen_width,screen_height,game_code,user_uuid,online_play
         target=join_game_state_updates,
         args=(game_code,user_uuid,obtain_game_state_callback,local_player_input_iterator)
     )
-    Input_updates_thread.start()
+    # Input_updates_thread.start()
 
 
     key_action_map = {

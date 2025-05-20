@@ -6,7 +6,7 @@ import player
 import server.service_pb2 as service_pb2
 import server.service_pb2_grpc as service_pb2_grpc
 
-DIRECTION = "localhost:50051"
+DIRECTION = "192.168.169.148:50051"
 
 
 def request_game_code_from_server():
